@@ -32,26 +32,22 @@ class _GameBoardState extends State<GameBoard> {
           );
         }
 
-        return Stack(
+        return Column(
           children: [
-            // Main game content
-            Column(
-              children: [
-                // Game header with stats
-                _buildGameHeader(context, gameProvider),
-                
-                // Game board with zoom
-                Expanded(
-                  child: _buildBoardWithZoom(context, gameProvider, gameState),
-                ),
-              ],
+            // Game header with stats
+            _buildGameHeader(context, gameProvider),
+            
+            // Game board with zoom - constrained to available space
+            Expanded(
+              child: _buildBoardWithZoom(context, gameProvider, gameState),
             ),
             
-            // Zoom controls - positioned below the top bar to avoid overlap
-            Positioned(
-              top: 120.0, // Moved down to be below the top bar
-              right: 16.0,
-              child: _buildZoomControls(context),
+            // Zoom controls - directly above bottom bar
+            Container(
+              height: 60.0,
+              child: Center(
+                child: _buildZoomControls(context),
+              ),
             ),
           ],
         );
