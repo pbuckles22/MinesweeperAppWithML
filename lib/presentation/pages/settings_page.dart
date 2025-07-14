@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/game_provider.dart';
 import '../../core/game_mode_config.dart';
+import '../../core/icon_utils.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -170,7 +171,7 @@ class SettingsPage extends StatelessWidget {
                     mode.name,
                     mode.description,
                     mode.id,
-                    _getDifficultyIcon(mode.id),
+                    IconUtils.getIconFromString(mode.icon) ?? Icons.games,
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -182,22 +183,7 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  IconData _getDifficultyIcon(String difficultyId) {
-    switch (difficultyId) {
-      case 'easy':
-        return Icons.sentiment_satisfied;
-      case 'normal':
-        return Icons.sentiment_neutral;
-      case 'hard':
-        return Icons.sentiment_dissatisfied;
-      case 'expert':
-        return Icons.warning;
-      case 'custom':
-        return Icons.settings;
-      default:
-        return Icons.games;
-    }
-  }
+
 
   Widget _buildDifficultyOption(
     BuildContext context,

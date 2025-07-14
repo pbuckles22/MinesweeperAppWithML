@@ -9,6 +9,7 @@ class GameMode {
   final int columns;
   final int mines;
   final bool enabled;
+  final String? icon;
 
   GameMode({
     required this.id,
@@ -18,6 +19,7 @@ class GameMode {
     required this.columns,
     required this.mines,
     required this.enabled,
+    this.icon,
   });
 
   factory GameMode.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class GameMode {
       columns: json['columns'] as int,
       mines: json['mines'] as int,
       enabled: json['enabled'] as bool,
+      icon: json['icon'] as String?,
     );
   }
 
@@ -41,6 +44,7 @@ class GameMode {
       'columns': columns,
       'mines': mines,
       'enabled': enabled,
+      if (icon != null) 'icon': icon,
     };
   }
 }
@@ -123,6 +127,7 @@ class GameModeConfig {
         columns: 9,
         mines: 10,
         enabled: true,
+        icon: 'sentiment_satisfied',
       ),
       GameMode(
         id: 'normal',
@@ -132,6 +137,7 @@ class GameModeConfig {
         columns: 16,
         mines: 40,
         enabled: true,
+        icon: 'sentiment_neutral',
       ),
       GameMode(
         id: 'hard',
@@ -141,6 +147,7 @@ class GameModeConfig {
         columns: 30,
         mines: 99,
         enabled: true,
+        icon: 'sentiment_dissatisfied',
       ),
       GameMode(
         id: 'expert',
@@ -150,6 +157,7 @@ class GameModeConfig {
         columns: 24,
         mines: 115,
         enabled: true,
+        icon: 'warning',
       ),
       GameMode(
         id: 'custom',
@@ -159,6 +167,7 @@ class GameModeConfig {
         columns: 10,
         mines: 0,
         enabled: false,
+        icon: 'settings',
       ),
     ];
     _defaultMode = 'easy';
@@ -205,6 +214,9 @@ class GameModeConfig {
   /// Reload game modes from JSON (useful for hot reload during development)
   Future<void> reload() async {
     _isLoaded = false;
+    _gameModes = [];
+    _defaultMode = 'easy';
+    _customSettings = null;
     await loadGameModes();
   }
 

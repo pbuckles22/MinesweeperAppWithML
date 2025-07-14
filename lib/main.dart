@@ -14,6 +14,11 @@ void main() async {
   runApp(const MinesweeperApp());
 }
 
+// Hot reload support for development
+void hotReload() async {
+  await GameModeConfig.instance.reload();
+}
+
 class MinesweeperApp extends StatelessWidget {
   const MinesweeperApp({Key? key}) : super(key: key);
 

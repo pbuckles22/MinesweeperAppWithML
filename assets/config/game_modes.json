@@ -7,7 +7,8 @@
       "rows": 9,
       "columns": 9,
       "mines": 10,
-      "enabled": true
+      "enabled": true,
+      "icon": "sentiment_satisfied"
     },
     {
       "id": "normal",
@@ -16,7 +17,8 @@
       "rows": 16,
       "columns": 16,
       "mines": 40,
-      "enabled": true
+      "enabled": true,
+      "icon": "sentiment_neutral"
     },
     {
       "id": "hard",
@@ -25,7 +27,8 @@
       "rows": 16,
       "columns": 30,
       "mines": 99,
-      "enabled": true
+      "enabled": true,
+      "icon": "sentiment_dissatisfied"
     },
     {
       "id": "expert",
@@ -34,16 +37,8 @@
       "rows": 18,
       "columns": 24,
       "mines": 115,
-      "enabled": true
-    },
-    {
-      "id": "chaotic",
-      "name": "Chaotic",
-      "description": "20×20 grid, 150 mines",
-      "rows": 20,
-      "columns": 20,
-      "mines": 150,
-      "enabled": true
+      "enabled": true,
+      "icon": "warning"
     },
     {
       "id": "custom",
@@ -52,7 +47,8 @@
       "rows": 18,
       "columns": 10,
       "mines": 0,
-      "enabled": false
+      "enabled": false,
+      "icon": "settings"
     }
   ],
   "default_mode": "easy",
