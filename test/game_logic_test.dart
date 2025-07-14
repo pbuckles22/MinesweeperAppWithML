@@ -373,6 +373,252 @@ void main() {
       });
     });
 
+    group('Chording Logic', () {
+      test('should chord correctly with correct flag count', () async {
+        final repository = GameRepositoryImpl();
+        // Create a 3x3 board with one mine at (0,0)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false), Cell(row: 0, col: 2, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false), Cell(row: 1, col: 2, hasBomb: false)],
+          [Cell(row: 2, col: 0, hasBomb: false), Cell(row: 2, col: 1, hasBomb: false), Cell(row: 2, col: 2, hasBomb: false)],
+        ];
+        // Set bomb counts
+        board[0][1] = board[0][1].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][0] = board[1][0].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][1] = board[1][1].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][2] = board[1][2].copyWith(bombsAround: 0);
+        board[2][0] = board[2][0].copyWith(bombsAround: 0);
+        board[2][1] = board[2][1].copyWith(bombsAround: 0);
+        board[2][2] = board[2][2].copyWith(bombsAround: 0);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal cell (0,1) which shows "1"
+        final revealedState = await repository.revealCell(0, 1);
+        expect(revealedState.getCell(0, 1).isRevealed, true);
+        expect(revealedState.getCell(0, 1).bombsAround, 1);
+        
+        // Flag the mine at (0,0)
+        final flaggedState = await repository.toggleFlag(0, 0);
+        expect(flaggedState.getCell(0, 0).isFlagged, true);
+        
+        // Chord on the "1" cell - should reveal all unflagged neighbors
+        final chordedState = await repository.chordCell(0, 1);
+        
+        // Check that all unflagged neighbors are revealed
+        expect(chordedState.getCell(1, 0).isRevealed, true);
+        expect(chordedState.getCell(1, 1).isRevealed, true);
+        expect(chordedState.getCell(0, 2).isRevealed, true);
+        
+        // Flagged cell should remain flagged
+        expect(chordedState.getCell(0, 0).isFlagged, true);
+        expect(chordedState.getCell(0, 0).isRevealed, false);
+      });
+
+      test('should not chord with wrong flag count', () async {
+        final repository = GameRepositoryImpl();
+        // Create a 3x3 board with one mine at (0,0)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false), Cell(row: 0, col: 2, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false), Cell(row: 1, col: 2, hasBomb: false)],
+          [Cell(row: 2, col: 0, hasBomb: false), Cell(row: 2, col: 1, hasBomb: false), Cell(row: 2, col: 2, hasBomb: false)],
+        ];
+        // Set bomb counts
+        board[0][1] = board[0][1].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][0] = board[1][0].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][1] = board[1][1].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][2] = board[1][2].copyWith(bombsAround: 0);
+        board[2][0] = board[2][0].copyWith(bombsAround: 0);
+        board[2][1] = board[2][1].copyWith(bombsAround: 0);
+        board[2][2] = board[2][2].copyWith(bombsAround: 0);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal cell (0,1) which shows "1"
+        final revealedState = await repository.revealCell(0, 1);
+        
+        // Don't flag the mine - wrong flag count
+        // Chord on the "1" cell - should do nothing
+        final chordedState = await repository.chordCell(0, 1);
+        
+        // Check that no cells were revealed
+        expect(chordedState.getCell(1, 0).isRevealed, false);
+        expect(chordedState.getCell(1, 1).isRevealed, false);
+        expect(chordedState.getCell(0, 2).isRevealed, false);
+      });
+
+      test('should not chord on unrevealed cells', () async {
+        final repository = GameRepositoryImpl();
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false), Cell(row: 0, col: 1, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false)],
+        ];
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 0,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 4,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Try to chord on unrevealed cell - should do nothing
+        final chordedState = await repository.chordCell(0, 0);
+        
+        // Check that no cells were revealed
+        expect(chordedState.getCell(0, 0).isRevealed, false);
+        expect(chordedState.getCell(0, 1).isRevealed, false);
+        expect(chordedState.getCell(1, 0).isRevealed, false);
+        expect(chordedState.getCell(1, 1).isRevealed, false);
+      });
+
+      test('should not chord on empty cells', () async {
+        final repository = GameRepositoryImpl();
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false), Cell(row: 0, col: 1, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false)],
+        ];
+        // Set all cells as empty
+        for (int row = 0; row < 2; row++) {
+          for (int col = 0; col < 2; col++) {
+            board[row][col] = board[row][col].copyWith(bombsAround: 0);
+          }
+        }
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 0,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 4,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal an empty cell - this will cascade and reveal all cells
+        final revealedState = await repository.revealCell(0, 0);
+        
+        // All cells should be revealed by cascade
+        expect(revealedState.getCell(0, 0).isRevealed, true);
+        expect(revealedState.getCell(0, 1).isRevealed, true);
+        expect(revealedState.getCell(1, 0).isRevealed, true);
+        expect(revealedState.getCell(1, 1).isRevealed, true);
+        
+        // Try to chord on empty cell - should do nothing (return same state)
+        final chordedState = await repository.chordCell(0, 0);
+        
+        // Check that chording didn't change anything (all cells still revealed)
+        expect(chordedState.getCell(0, 0).isRevealed, true);
+        expect(chordedState.getCell(0, 1).isRevealed, true);
+        expect(chordedState.getCell(1, 0).isRevealed, true);
+        expect(chordedState.getCell(1, 1).isRevealed, true);
+        
+        // Verify that chording returned the same state (no changes)
+        expect(chordedState.revealedCount, revealedState.revealedCount);
+      });
+
+      test('should handle chording that reveals a mine', () async {
+        final repository = GameRepositoryImpl();
+        // Create a 3x3 board with one mine at (1,1)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false), Cell(row: 0, col: 1, hasBomb: false), Cell(row: 0, col: 2, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: true), Cell(row: 1, col: 2, hasBomb: false)],
+          [Cell(row: 2, col: 0, hasBomb: false), Cell(row: 2, col: 1, hasBomb: false), Cell(row: 2, col: 2, hasBomb: false)],
+        ];
+        // Set bomb counts
+        board[0][0] = board[0][0].copyWith(bombsAround: 1); // Adjacent to mine
+        board[0][1] = board[0][1].copyWith(bombsAround: 1); // Adjacent to mine
+        board[0][2] = board[0][2].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][0] = board[1][0].copyWith(bombsAround: 1); // Adjacent to mine
+        board[1][2] = board[1][2].copyWith(bombsAround: 1); // Adjacent to mine
+        board[2][0] = board[2][0].copyWith(bombsAround: 1); // Adjacent to mine
+        board[2][1] = board[2][1].copyWith(bombsAround: 1); // Adjacent to mine
+        board[2][2] = board[2][2].copyWith(bombsAround: 1); // Adjacent to mine
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal cell (0,0) which shows "1"
+        final revealedState = await repository.revealCell(0, 0);
+        expect(revealedState.getCell(0, 0).isRevealed, true);
+        expect(revealedState.getCell(0, 0).bombsAround, 1);
+        
+        // Place a flag on a non-mine neighbor (e.g., (0,1)) so flag count matches the number
+        await repository.toggleFlag(0, 1);
+        
+        // Chord on the "1" cell - should reveal the unflagged mine and end game
+        final chordedState = await repository.chordCell(0, 0);
+        
+        // Check that game is over
+        expect(chordedState.isGameOver, true);
+        expect(chordedState.getCell(1, 1).isExploded, true);
+      });
+
+      test('should not chord after game over', () async {
+        final repository = GameRepositoryImpl();
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false)],
+        ];
+        board[0][1] = board[0][1].copyWith(bombsAround: 1);
+        board[1][0] = board[1][0].copyWith(bombsAround: 1);
+        board[1][1] = board[1][1].copyWith(bombsAround: 1);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 4,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal the bomb to end game
+        final gameOverState = await repository.revealCell(0, 0);
+        expect(gameOverState.isGameOver, true);
+        
+        // Try to chord after game over - should do nothing
+        final chordedState = await repository.chordCell(0, 1);
+        expect(chordedState.isGameOver, true); // Should still be game over
+      });
+    });
+
     group('Integration Tests', () {
       test('should handle complete game flow', () async {
         // Use a deterministic 2x2 board with one mine

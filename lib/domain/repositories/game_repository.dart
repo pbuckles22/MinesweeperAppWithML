@@ -11,6 +11,9 @@ abstract class GameRepository {
   /// Toggle flag on a cell at the specified position
   Future<GameState> toggleFlag(int row, int col);
   
+  /// Chord a cell (right-click on revealed numbered cell to reveal unflagged neighbors)
+  Future<GameState> chordCell(int row, int col);
+  
   /// Get the current game state
   GameState getCurrentState();
   

@@ -136,6 +136,100 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
+  Future<GameState> chordCell(int row, int col) async {
+    if (_currentState == null || _currentState!.isGameOver) {
+      return _currentState!; // No action if game is over
+    }
+    
+    if (!_currentState!.isValidPosition(row, col)) {
+      throw RangeError('Invalid position ($row, $col)');
+    }
+    
+    final cell = _currentState!.getCell(row, col);
+    
+    // Can only chord on revealed numbered cells (not empty cells)
+    if (!cell.isRevealed || cell.hasBomb || cell.bombsAround == 0) {
+      return _currentState!; // No action for unrevealed, bomb, or empty cells
+    }
+    
+    // Count flags around this cell
+    int flagCount = 0;
+    final rows = _currentState!.rows;
+    final cols = _currentState!.columns;
+    
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue; // Skip self
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        // Check bounds
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+        
+        final neighbor = _currentState!.getCell(nr, nc);
+        if (neighbor.isFlagged) {
+          flagCount++;
+        }
+      }
+    }
+    
+    // Only chord if flag count matches the number
+    if (flagCount != cell.bombsAround) {
+      return _currentState!; // Wrong flag count, no action
+    }
+    
+    // Create a copy of the board to modify
+    final newBoard = _copyBoard(_currentState!.board);
+    bool gameOver = false;
+    
+    // Reveal all unflagged neighbors
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue; // Skip self
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        // Check bounds
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+        
+        final neighbor = newBoard[nr][nc];
+        
+        // Skip if already revealed or flagged
+        if (neighbor.isRevealed || neighbor.isFlagged) continue;
+        
+        // Reveal the neighbor
+        neighbor.reveal();
+        
+        // Check if we hit a bomb
+        if (neighbor.hasBomb) {
+          neighbor.forceReveal(); // Mark as exploded
+          gameOver = true;
+        }
+      }
+    }
+    
+    // If we hit a bomb, reveal all mines
+    if (gameOver) {
+      _revealAllMines(newBoard);
+    }
+    
+    // Count cells
+    final counts = _countCells(newBoard);
+    
+    _currentState = _currentState!.copyWith(
+      board: newBoard,
+      revealedCount: counts['revealed'],
+      flaggedCount: counts['flagged'],
+      gameStatus: gameOver ? GameConstants.gameStateLost : _currentState!.gameStatus,
+      endTime: gameOver ? DateTime.now() : _currentState!.endTime,
+    );
+    
+    return _currentState!;
+  }
+
+  @override
   GameState getCurrentState() {
     if (_currentState == null) {
       throw StateError('Game not initialized');
