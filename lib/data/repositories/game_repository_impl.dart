@@ -3,10 +3,12 @@ import '../../domain/repositories/game_repository.dart';
 import '../../domain/entities/game_state.dart';
 import '../../domain/entities/cell.dart';
 import '../../core/constants.dart';
+import '../../core/feature_flags.dart';
 
 class GameRepositoryImpl implements GameRepository {
   GameState? _currentState;
   final Random _random = Random();
+  bool _isFirstClick = true; // Track if this is the first click
 
   @override
   Future<GameState> initializeGame(String difficulty) async {
@@ -42,6 +44,9 @@ class GameRepositoryImpl implements GameRepository {
       difficulty: difficulty,
     );
     
+    // Reset first click flag
+    _isFirstClick = true;
+    
     return _currentState!;
   }
 
@@ -62,6 +67,15 @@ class GameRepositoryImpl implements GameRepository {
     
     // Create a copy of the board to modify
     final newBoard = _copyBoard(_currentState!.board);
+    
+      // First Click Guarantee Logic
+  if (_isFirstClick && FeatureFlags.enableFirstClickGuarantee) {
+    _ensureFirstClickCascade(newBoard, row, col);
+    // Update bomb counts incrementally after mine relocation
+    _updateBombCountsAfterMineMove(newBoard);
+  }
+    
+    // Get the updated target cell after potential mine relocation
     final targetCell = newBoard[row][col];
     
     // Check if cell is empty BEFORE revealing it
@@ -106,6 +120,9 @@ class GameRepositoryImpl implements GameRepository {
         endTime: isWon ? DateTime.now() : null,
       );
     }
+    
+    // Mark that first click has been made
+    _isFirstClick = false;
     
     return _currentState!;
   }
@@ -478,5 +495,293 @@ class GameRepositoryImpl implements GameRepository {
         }
       }
     }
+  }
+
+  void _ensureFirstClickCascade(List<List<Cell>> board, int row, int col) {
+    final targetCell = board[row][col];
+    
+    // If the target cell is already a blank cell (no bomb, no adjacent bombs), we're good
+    if (!targetCell.hasBomb && targetCell.bombsAround == 0) {
+      return; // Already a cascade, no need to move mines
+    }
+    
+    // For First Click Guarantee, we want to ensure the first click reveals a cascade
+    // This means the clicked cell should be blank (no bomb, no adjacent bombs)
+    
+    // If target cell has a bomb, move it away and ensure target becomes blank
+    if (targetCell.hasBomb) {
+      _moveMineFromTargetToCreateBlank(board, row, col);
+    }
+    
+    // If target cell is a numbered cell (not blank), move nearby mines to make it blank
+    if (targetCell.bombsAround > 0) {
+      _moveNearbyMinesToCreateBlank(board, row, col);
+    }
+  }
+
+  void _createBlankCellByMovingMine(List<List<Cell>> board, int targetRow, int targetCol) {
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    // Find all mines
+    final minePositions = <List<int>>[];
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        if (board[r][c].hasBomb) {
+          minePositions.add([r, c]);
+        }
+      }
+    }
+    
+    if (minePositions.isEmpty) return;
+    
+    // For very small boards (1x1, 2x2), just remove the mine from the target
+    if (rows * cols <= 4) {
+      if (board[targetRow][targetCol].hasBomb) {
+        board[targetRow][targetCol] = board[targetRow][targetCol].copyWith(hasBomb: false);
+      }
+      return;
+    }
+    
+    // Find a mine that's not adjacent to the target cell
+    final targetAdjacent = <List<int>>[];
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        final nr = targetRow + dr;
+        final nc = targetCol + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+          targetAdjacent.add([nr, nc]);
+        }
+      }
+    }
+    
+    // Find a mine that's not adjacent to target
+    List<int>? mineToMove;
+    for (final minePos in minePositions) {
+      bool isAdjacent = false;
+      for (final adjacent in targetAdjacent) {
+        if (minePos[0] == adjacent[0] && minePos[1] == adjacent[1]) {
+          isAdjacent = true;
+          break;
+        }
+      }
+      if (!isAdjacent) {
+        mineToMove = minePos;
+        break;
+      }
+    }
+    
+    // If all mines are adjacent, just pick any mine
+    if (mineToMove == null && minePositions.isNotEmpty) {
+      mineToMove = minePositions[_random.nextInt(minePositions.length)];
+    }
+    
+    if (mineToMove != null) {
+      // Find a safe position to move the mine to (far from target)
+      List<int>? safePosition;
+      int attempts = 0;
+      const maxAttempts = 50;
+      
+      while (safePosition == null && attempts < maxAttempts) {
+        final newRow = _random.nextInt(rows);
+        final newCol = _random.nextInt(cols);
+        
+        // Make sure we're not placing it on the target or adjacent to target
+        bool isValidPosition = true;
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            final nr = targetRow + dr;
+            final nc = targetCol + dc;
+            if (nr == newRow && nc == newCol) {
+              isValidPosition = false;
+              break;
+            }
+          }
+        }
+        
+        // Also make sure we're not placing it where there's already a mine
+        if (isValidPosition && (newRow != targetRow || newCol != targetCol)) {
+          if (!board[newRow][newCol].hasBomb) {
+            safePosition = [newRow, newCol];
+          }
+        }
+        attempts++;
+      }
+      
+      if (safePosition != null) {
+        board[mineToMove[0]][mineToMove[1]] = board[mineToMove[0]][mineToMove[1]].copyWith(hasBomb: false);
+        board[safePosition[0]][safePosition[1]] = board[safePosition[0]][safePosition[1]].copyWith(hasBomb: true);
+      } else {
+        // As a fallback, just remove the mine from the target cell
+        if (board[targetRow][targetCol].hasBomb) {
+          board[targetRow][targetCol] = board[targetRow][targetCol].copyWith(hasBomb: false);
+        }
+      }
+    }
+  }
+
+  /// Move mine from target cell and ensure target becomes blank
+  void _moveMineFromTargetToCreateBlank(List<List<Cell>> board, int targetRow, int targetCol) {
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    // Remove bomb from target cell
+    board[targetRow][targetCol] = board[targetRow][targetCol].copyWith(hasBomb: false);
+    
+    // Find a safe position to place the bomb (far from target)
+    List<int>? safePosition;
+    int attempts = 0;
+    const maxAttempts = 50;
+    
+    while (safePosition == null && attempts < maxAttempts) {
+      final newRow = _random.nextInt(rows);
+      final newCol = _random.nextInt(cols);
+      
+      // Make sure we're not placing it on the target or adjacent to target
+      bool isValidPosition = true;
+      for (int dr = -1; dr <= 1; dr++) {
+        for (int dc = -1; dc <= 1; dc++) {
+          final nr = targetRow + dr;
+          final nc = targetCol + dc;
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+            if (nr == newRow && nc == newCol) {
+              isValidPosition = false;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Also make sure we're not placing it where there's already a mine
+      if (isValidPosition && (newRow != targetRow || newCol != targetCol)) {
+        if (!board[newRow][newCol].hasBomb) {
+          safePosition = [newRow, newCol];
+        }
+      }
+      attempts++;
+    }
+    
+    if (safePosition != null) {
+      board[safePosition[0]][safePosition[1]] = board[safePosition[0]][safePosition[1]].copyWith(hasBomb: true);
+    }
+    // If no safe position found, the bomb is effectively removed (edge case for very small boards)
+  }
+
+  /// Move nearby mines to ensure target cell becomes blank
+  void _moveNearbyMinesToCreateBlank(List<List<Cell>> board, int targetRow, int targetCol) {
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    // Find all mines adjacent to the target cell
+    final adjacentMines = <List<int>>[];
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue; // Skip target cell
+        
+        final nr = targetRow + dr;
+        final nc = targetCol + dc;
+        
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+          if (board[nr][nc].hasBomb) {
+            adjacentMines.add([nr, nc]);
+          }
+        }
+      }
+    }
+    
+    if (adjacentMines.isEmpty) return;
+    
+    // Move each adjacent mine to a safe position
+    for (final minePos in adjacentMines) {
+      List<int>? safePosition;
+      int attempts = 0;
+      const maxAttempts = 30;
+      
+      while (safePosition == null && attempts < maxAttempts) {
+        final newRow = _random.nextInt(rows);
+        final newCol = _random.nextInt(cols);
+        
+        // Make sure we're not placing it adjacent to target
+        bool isValidPosition = true;
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            final nr = targetRow + dr;
+            final nc = targetCol + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+              if (nr == newRow && nc == newCol) {
+                isValidPosition = false;
+                break;
+              }
+            }
+          }
+        }
+        
+        // Also make sure we're not placing it where there's already a mine
+        if (isValidPosition && (newRow != targetRow || newCol != targetCol)) {
+          if (!board[newRow][newCol].hasBomb) {
+            safePosition = [newRow, newCol];
+          }
+        }
+        attempts++;
+      }
+      
+      if (safePosition != null) {
+        board[minePos[0]][minePos[1]] = board[minePos[0]][minePos[1]].copyWith(hasBomb: false);
+        board[safePosition[0]][safePosition[1]] = board[safePosition[0]][safePosition[1]].copyWith(hasBomb: true);
+      }
+    }
+  }
+
+  /// Efficiently updates bomb counts after mine relocation
+  /// Only recalculates counts for cells affected by the mine move
+  void _updateBombCountsAfterMineMove(List<List<Cell>> board) {
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    // Since we don't track mine movements directly, we need to detect changes
+    // by comparing current bomb counts with actual bombs around each cell
+    final cellsToUpdate = <List<int>>[];
+    
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        final cell = board[r][c];
+        final actualBombsAround = _countBombsAround(board, r, c);
+        if (cell.bombsAround != actualBombsAround) {
+          cellsToUpdate.add([r, c]);
+        }
+      }
+    }
+    
+    // Update bomb counts for affected cells
+    for (final pos in cellsToUpdate) {
+      final r = pos[0], c = pos[1];
+      final actualBombsAround = _countBombsAround(board, r, c);
+      board[r][c] = board[r][c].copyWith(bombsAround: actualBombsAround);
+    }
+  }
+
+  /// Count bombs around a specific cell
+  int _countBombsAround(List<List<Cell>> board, int row, int col) {
+    int count = 0;
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue; // Skip self
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        // Check bounds
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+        
+        if (board[nr][nc].hasBomb) {
+          count++;
+        }
+      }
+    }
+    
+    return count;
   }
 } 

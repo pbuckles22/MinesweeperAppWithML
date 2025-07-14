@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/game_board.dart';
 import '../widgets/game_over_dialog.dart';
+import 'settings_page.dart';
 import '../../core/constants.dart';
 
 class GamePage extends StatefulWidget {
@@ -34,7 +36,7 @@ class _GamePageState extends State<GamePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: _showDifficultyDialog,
+            onPressed: _showSettings,
           ),
         ],
       ),
@@ -96,6 +98,14 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
+  void _showSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SettingsPage(),
+      ),
+    );
+  }
+
   void _showGameOverModal(BuildContext context, GameProvider gameProvider) {
     final gameState = gameProvider.gameState!;
     final isWin = gameProvider.isGameWon;
@@ -132,7 +142,7 @@ class _GamePageState extends State<GamePage> {
             label: const Text('New Game'),
           ),
           ElevatedButton.icon(
-            onPressed: _showDifficultyDialog,
+            onPressed: _showSettings,
             icon: const Icon(Icons.settings),
             label: const Text('Settings'),
           ),
