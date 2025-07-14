@@ -30,20 +30,20 @@ class _GameActivityState extends State<GameActivity> {
   int columnCount = 10;
 
   // The grid of squares
-  List<List<BoardSquare>> board;
+  List<List<BoardSquare>> board = [];
 
   // "Opened" refers to being clicked already
-  List<bool> openedSquares;
+  List<bool> openedSquares = [];
 
   // A flagged square is a square a user has added a flag on by long pressing
-  List<bool> flaggedSquares;
+  List<bool> flaggedSquares = [];
 
   // Probability that a square will be a bomb
   int bombProbability = 3;
   int maxProbability = 15;
 
   int bombCount = 0;
-  int squaresLeft;
+  int squaresLeft = 0;
 
   @override
   void initState() {
@@ -298,7 +298,7 @@ class _GameActivityState extends State<GameActivity> {
           title: Text("Game Over!"),
           content: Text("You stepped on a mine!"),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () {
                 _initialiseGame();
                 Navigator.pop(context);
@@ -319,7 +319,7 @@ class _GameActivityState extends State<GameActivity> {
           title: Text("Congratulations!"),
           content: Text("You Win!"),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () {
                 _initialiseGame();
                 Navigator.pop(context);
@@ -358,8 +358,6 @@ class _GameActivityState extends State<GameActivity> {
         return Image.asset('images/facingDown.png');
       case ImageType.flagged:
         return Image.asset('images/flagged.png');
-      default:
-        return null;
     }
   }
 
@@ -384,7 +382,7 @@ class _GameActivityState extends State<GameActivity> {
       case 8:
         return ImageType.eight;
       default:
-        return null;
+        return ImageType.zero; // Default to zero for any other number
     }
   }
 }

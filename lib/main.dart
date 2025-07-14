@@ -1,27 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_minesweeper/game_activity.dart';
+import 'package:provider/provider.dart';
+import 'presentation/providers/game_provider.dart';
+import 'presentation/pages/game_page.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(const MinesweeperApp());
+}
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MinesweeperApp extends StatelessWidget {
+  const MinesweeperApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+    return ChangeNotifierProvider(
+      create: (context) => GameProvider(),
+      child: MaterialApp(
+        title: 'Minesweeper with ML',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+            brightness: Brightness.light,
+          ),
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+        ),
+        home: const GamePage(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: GameActivity(),
     );
   }
 }
