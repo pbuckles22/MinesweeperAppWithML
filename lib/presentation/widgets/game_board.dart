@@ -17,7 +17,8 @@ class _GameBoardState extends State<GameBoard> {
   double _zoomLevel = 1.0;
   static const double _minZoom = 0.5;
   static const double _maxZoom = 3.0;
-  static const double _zoomStep = 0.1;
+  static const double _zoomStep = 0.05;
+  static const double _baseCellSize = 40.0;
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +47,9 @@ class _GameBoardState extends State<GameBoard> {
               ],
             ),
             
-            // Zoom controls - always visible, positioned at top-right
+            // Zoom controls - positioned to avoid overlap with progress
             Positioned(
-              top: 16.0,
+              top: 80.0,
               right: 16.0,
               child: _buildZoomControls(context),
             ),
@@ -145,47 +146,54 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
+    final cellSize = _baseCellSize * _zoomLevel;
+    
     return GestureDetector(
       onScaleStart: (details) {
         // Store initial zoom level for pinch gesture
       },
       onScaleUpdate: (details) {
-        // Handle pinch-to-zoom
+        // Handle pinch-to-zoom with slower scaling
         if (details.scale != 1.0) {
           setState(() {
-            _zoomLevel = (_zoomLevel * details.scale).clamp(_minZoom, _maxZoom);
+            // Use a smaller scale factor for pinch gestures
+            final scaleFactor = details.scale > 1.0 ? 1.02 : 0.98;
+            _zoomLevel = (_zoomLevel * scaleFactor).clamp(_minZoom, _maxZoom);
           });
         }
       },
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: SingleChildScrollView(
-          child: SizedBox(
-            width: gameState.columns * 40 * _zoomLevel, // Fixed cell size * zoom
-            height: gameState.rows * 40 * _zoomLevel,   // Fixed cell size * zoom
-            child: Transform.scale(
-              scale: _zoomLevel,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(8.0),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: gameState.columns,
-                  childAspectRatio: 1.0,
-                ),
-                itemCount: gameState.rows * gameState.columns,
-                itemBuilder: (context, index) {
-                  final row = index ~/ gameState.columns;
-                  final col = index % gameState.columns;
-                  
-                  return CellWidget(
+          child: Container(
+            width: gameState.columns * cellSize,
+            height: gameState.rows * cellSize,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(8.0),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: gameState.columns,
+                childAspectRatio: 1.0,
+                mainAxisSpacing: 2.0,
+                crossAxisSpacing: 2.0,
+              ),
+              itemCount: gameState.rows * gameState.columns,
+              itemBuilder: (context, index) {
+                final row = index ~/ gameState.columns;
+                final col = index % gameState.columns;
+                
+                return SizedBox(
+                  width: cellSize,
+                  height: cellSize,
+                  child: CellWidget(
                     row: row,
                     col: col,
                     onTap: () => gameProvider.revealCell(row, col),
                     onLongPress: () => gameProvider.toggleFlag(row, col),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
