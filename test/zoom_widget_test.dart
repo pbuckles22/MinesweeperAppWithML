@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_minesweeper/presentation/pages/game_page.dart';
 import 'package:flutter_minesweeper/presentation/providers/game_provider.dart';
+import 'package:flutter_minesweeper/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
   testWidgets('Zoom controls change board scale', (WidgetTester tester) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider(
-        create: (_) => GameProvider(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => GameProvider()),
+          ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ],
         child: const MaterialApp(home: GamePage()),
       ),
     );
@@ -92,8 +96,11 @@ void main() {
 
   testWidgets('Zoom controls remain visible when zoomed in', (WidgetTester tester) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider(
-        create: (_) => GameProvider(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => GameProvider()),
+          ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ],
         child: const MaterialApp(home: GamePage()),
       ),
     );

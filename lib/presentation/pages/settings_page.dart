@@ -29,6 +29,14 @@ class SettingsPage extends StatelessWidget {
               _buildModeDescription(context, settingsProvider),
               const SizedBox(height: 24),
               
+              // Board Size Section
+              _buildSectionHeader(context, 'Board Size'),
+              const SizedBox(height: 8),
+              
+              // Difficulty Selection
+              _buildDifficultySelection(context, settingsProvider),
+              const SizedBox(height: 24),
+              
               // Reset to Defaults
               _buildResetButton(context, settingsProvider),
             ],
@@ -128,6 +136,132 @@ class SettingsPage extends StatelessWidget {
                   : 'Traditional Minesweeper rules. The first click could hit a mine, revealing a single numbered cell, or trigger a cascade. Pure random chance.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDifficultySelection(BuildContext context, SettingsProvider settingsProvider) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Difficulty',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Easy
+            _buildDifficultyOption(
+              context,
+              settingsProvider,
+              'Easy',
+              '9×9 grid, 10 mines',
+              'easy',
+              Icons.sentiment_satisfied,
+            ),
+            const SizedBox(height: 8),
+            
+            // Medium
+            _buildDifficultyOption(
+              context,
+              settingsProvider,
+              'Medium',
+              '16×16 grid, 40 mines',
+              'medium',
+              Icons.sentiment_neutral,
+            ),
+            const SizedBox(height: 8),
+            
+            // Hard
+            _buildDifficultyOption(
+              context,
+              settingsProvider,
+              'Hard',
+              '16×30 grid, 99 mines',
+              'hard',
+              Icons.sentiment_dissatisfied,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDifficultyOption(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    String title,
+    String subtitle,
+    String difficulty,
+    IconData icon,
+  ) {
+    final isSelected = settingsProvider.selectedDifficulty == difficulty;
+    
+    return InkWell(
+      onTap: () {
+        settingsProvider.setDifficulty(difficulty);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected 
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+              : Colors.transparent,
+          border: Border.all(
+            color: isSelected 
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected 
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected 
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
           ],
         ),
       ),

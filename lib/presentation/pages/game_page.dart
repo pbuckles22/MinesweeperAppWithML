@@ -15,7 +15,6 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  String _selectedDifficulty = 'beginner';
   bool _showGameOverDialog = false;
 
   @override
@@ -23,7 +22,8 @@ class _GamePageState extends State<GamePage> {
     super.initState();
     // Initialize game when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GameProvider>().initializeGame(_selectedDifficulty);
+      final settingsProvider = context.read<SettingsProvider>();
+      context.read<GameProvider>().initializeGame(settingsProvider.selectedDifficulty);
     });
   }
 
@@ -74,7 +74,10 @@ class _GamePageState extends State<GamePage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => gameProvider.initializeGame(_selectedDifficulty),
+                    onPressed: () {
+                      final settingsProvider = context.read<SettingsProvider>();
+                      gameProvider.initializeGame(settingsProvider.selectedDifficulty);
+                    },
                     child: const Text('Retry'),
                   ),
                 ],
@@ -120,7 +123,8 @@ class _GamePageState extends State<GamePage> {
         onNewGame: () {
           Navigator.of(context).pop();
           _showGameOverDialog = false;
-          gameProvider.resetGame();
+          final settingsProvider = context.read<SettingsProvider>();
+          gameProvider.initializeGame(settingsProvider.selectedDifficulty);
         },
         onClose: () {
           Navigator.of(context).pop();
@@ -137,7 +141,10 @@ class _GamePageState extends State<GamePage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           ElevatedButton.icon(
-            onPressed: () => gameProvider.resetGame(),
+            onPressed: () {
+              final settingsProvider = context.read<SettingsProvider>();
+              gameProvider.initializeGame(settingsProvider.selectedDifficulty);
+            },
             icon: const Icon(Icons.refresh),
             label: const Text('New Game'),
           ),
@@ -151,42 +158,7 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
-  void _showDifficultyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Difficulty'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: GameConstants.difficultyLevels.keys.map((difficulty) {
-            final config = GameConstants.difficultyLevels[difficulty]!;
-            return ListTile(
-              title: Text(difficulty.toUpperCase()),
-              subtitle: Text(
-                '${config['rows']}x${config['columns']} - ${config['mines']} mines',
-              ),
-              trailing: _selectedDifficulty == difficulty 
-                  ? const Icon(Icons.check)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _selectedDifficulty = difficulty;
-                });
-                context.read<GameProvider>().initializeGame(difficulty);
-                Navigator.of(context).pop();
-              },
-            );
-          }).toList(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   @override
   void dispose() {
