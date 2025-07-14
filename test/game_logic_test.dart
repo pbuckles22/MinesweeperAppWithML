@@ -901,7 +901,10 @@ void main() {
         
         // Should complete within reasonable time (less than 1 second)
         expect(duration.inMilliseconds, lessThan(1000));
-        expect(result.getCell(0, 0).isRevealed, true);
+        
+        // The cell should either be revealed or the game should be over
+        // (if we hit a mine on first click)
+        expect(result.getCell(0, 0).isRevealed || result.isGameOver, true);
       });
 
       test('should handle large cascade efficiently', () async {

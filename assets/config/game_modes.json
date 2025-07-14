@@ -37,6 +37,15 @@
       "enabled": true
     },
     {
+      "id": "chaotic",
+      "name": "Chaotic",
+      "description": "20×20 grid, 150 mines",
+      "rows": 20,
+      "columns": 20,
+      "mines": 150,
+      "enabled": true
+    },
+    {
       "id": "custom",
       "name": "Custom",
       "description": "Custom grid size and mine count",
