@@ -16,7 +16,7 @@ class GameBoard extends StatefulWidget {
 class _GameBoardState extends State<GameBoard> {
   double _zoomLevel = 1.0;
   static const double _minZoom = 0.5;
-  static const double _maxZoom = 2.0;
+  static const double _maxZoom = 3.0;
   static const double _zoomStep = 0.1;
 
   @override
@@ -31,17 +31,26 @@ class _GameBoardState extends State<GameBoard> {
           );
         }
 
-        return Column(
+        return Stack(
           children: [
-            // Game header with stats
-            _buildGameHeader(context, gameProvider),
+            // Main game content
+            Column(
+              children: [
+                // Game header with stats
+                _buildGameHeader(context, gameProvider),
+                
+                // Game board with zoom
+                Expanded(
+                  child: _buildBoardWithZoom(context, gameProvider, gameState),
+                ),
+              ],
+            ),
             
-            // Zoom controls
-            _buildZoomControls(context),
-            
-            // Game board
-            Expanded(
-              child: _buildBoard(context, gameProvider, gameState),
+            // Zoom controls - always visible, positioned at top-right
+            Positioned(
+              top: 16.0,
+              right: 16.0,
+              child: _buildZoomControls(context),
             ),
           ],
         );
@@ -95,28 +104,91 @@ class _GameBoardState extends State<GameBoard> {
 
   Widget _buildZoomControls(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(8.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4.0,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             onPressed: _zoomOut,
             icon: const Icon(Icons.zoom_out),
             tooltip: 'Zoom Out',
+            iconSize: 20,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
               '${(_zoomLevel * 100).toInt()}%',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           IconButton(
             onPressed: _zoomIn,
             icon: const Icon(Icons.zoom_in),
             tooltip: 'Zoom In',
+            iconSize: 20,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
+    return GestureDetector(
+      onScaleStart: (details) {
+        // Store initial zoom level for pinch gesture
+      },
+      onScaleUpdate: (details) {
+        // Handle pinch-to-zoom
+        if (details.scale != 1.0) {
+          setState(() {
+            _zoomLevel = (_zoomLevel * details.scale).clamp(_minZoom, _maxZoom);
+          });
+        }
+      },
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SingleChildScrollView(
+          child: SizedBox(
+            width: gameState.columns * 40 * _zoomLevel, // Fixed cell size * zoom
+            height: gameState.rows * 40 * _zoomLevel,   // Fixed cell size * zoom
+            child: Transform.scale(
+              scale: _zoomLevel,
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: gameState.columns,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: gameState.rows * gameState.columns,
+                itemBuilder: (context, index) {
+                  final row = index ~/ gameState.columns;
+                  final col = index % gameState.columns;
+                  
+                  return CellWidget(
+                    row: row,
+                    col: col,
+                    onTap: () => gameProvider.revealCell(row, col),
+                    onLongPress: () => gameProvider.toggleFlag(row, col),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -141,31 +213,6 @@ class _GameBoardState extends State<GameBoard> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBoard(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    return Transform.scale(
-      scale: _zoomLevel,
-      child: GridView.builder(
-        padding: const EdgeInsets.all(8.0),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: gameState.columns,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: gameState.rows * gameState.columns,
-        itemBuilder: (context, index) {
-          final row = index ~/ gameState.columns;
-          final col = index % gameState.columns;
-          
-          return CellWidget(
-            row: row,
-            col: col,
-            onTap: () => gameProvider.revealCell(row, col),
-            onLongPress: () => gameProvider.toggleFlag(row, col),
-          );
-        },
       ),
     );
   }
