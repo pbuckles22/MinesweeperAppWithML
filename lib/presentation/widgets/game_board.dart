@@ -15,8 +15,8 @@ class GameBoard extends StatefulWidget {
 
 class _GameBoardState extends State<GameBoard> {
   double _zoomLevel = 1.0;
-  static const double _minZoom = 1.0;
-  static const double _maxZoom = 3.0;
+  static const double _minZoom = 1.0; // 100%
+  static const double _maxZoom = 2.0; // Changed from 3.0 to 2.0 (200%)
   static const double _zoomStep = 0.1;
   static const double _baseCellSize = 40.0;
 
@@ -47,9 +47,9 @@ class _GameBoardState extends State<GameBoard> {
               ],
             ),
             
-            // Zoom controls - positioned to avoid overlap with progress
+            // Zoom controls - positioned below the top bar to avoid overlap
             Positioned(
-              top: 80.0,
+              top: 120.0, // Moved down to be below the top bar
               right: 16.0,
               child: _buildZoomControls(context),
             ),
@@ -158,7 +158,13 @@ class _GameBoardState extends State<GameBoard> {
         if (details.scale != 1.0) {
           setState(() {
             // Use a much smaller scale factor for pinch gestures to make it less sensitive
-            final scaleFactor = details.scale > 1.0 ? 1.005 : 0.995;
+            // Fix zoom out by properly handling scale < 1.0
+            double scaleFactor;
+            if (details.scale > 1.0) {
+              scaleFactor = 1.005; // Zoom in
+            } else {
+              scaleFactor = 0.995; // Zoom out
+            }
             _zoomLevel = (_zoomLevel * scaleFactor).clamp(_minZoom, _maxZoom);
           });
         }
