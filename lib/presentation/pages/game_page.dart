@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/game_board.dart';
+import '../widgets/game_over_dialog.dart';
 import '../../core/constants.dart';
 
 class GamePage extends StatefulWidget {
@@ -13,6 +14,7 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage> {
   String _selectedDifficulty = 'beginner';
+  bool _showGameOverDialog = false;
 
   @override
   void initState() {
@@ -38,6 +40,14 @@ class _GamePageState extends State<GamePage> {
       ),
       body: Consumer<GameProvider>(
         builder: (context, gameProvider, child) {
+          // Show game over dialog when game ends
+          if (gameProvider.isGameOver && !_showGameOverDialog) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showGameOverDialog = true;
+              _showGameOverModal(context, gameProvider);
+            });
+          }
+
           if (gameProvider.isLoading) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -86,26 +96,45 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
+  void _showGameOverModal(BuildContext context, GameProvider gameProvider) {
+    final gameState = gameProvider.gameState!;
+    final isWin = gameProvider.isGameWon;
+    final gameDuration = gameProvider.timerService.elapsed;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => GameOverDialog(
+        isWin: isWin,
+        gameDuration: gameDuration,
+        onNewGame: () {
+          Navigator.of(context).pop();
+          _showGameOverDialog = false;
+          gameProvider.resetGame();
+        },
+        onClose: () {
+          Navigator.of(context).pop();
+          _showGameOverDialog = false;
+        },
+      ),
+    );
+  }
+
   Widget _buildGameControls(BuildContext context, GameProvider gameProvider) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // New game button
           ElevatedButton.icon(
-            onPressed: () => gameProvider.initializeGame(_selectedDifficulty),
+            onPressed: () => gameProvider.resetGame(),
             icon: const Icon(Icons.refresh),
             label: const Text('New Game'),
           ),
-          
-          // Reset game button
           ElevatedButton.icon(
-            onPressed: gameProvider.isGameInitialized 
-                ? () => gameProvider.resetGame() 
-                : null,
-            icon: const Icon(Icons.restart_alt),
-            label: const Text('Reset'),
+            onPressed: _showDifficultyDialog,
+            icon: const Icon(Icons.settings),
+            label: const Text('Settings'),
           ),
         ],
       ),

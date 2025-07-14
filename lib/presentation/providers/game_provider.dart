@@ -3,15 +3,20 @@ import '../../domain/entities/game_state.dart';
 import '../../domain/entities/cell.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../../data/repositories/game_repository_impl.dart';
+import '../../services/timer_service.dart';
+import '../../services/haptic_service.dart';
+import '../../core/feature_flags.dart';
 
 class GameProvider extends ChangeNotifier {
   final GameRepository _repository;
+  final TimerService _timerService;
   GameState? _gameState;
   bool _isLoading = false;
   String? _error;
 
-  GameProvider({GameRepository? repository}) 
-      : _repository = repository ?? GameRepositoryImpl();
+  GameProvider({GameRepository? repository, TimerService? timerService}) 
+      : _repository = repository ?? GameRepositoryImpl(),
+        _timerService = timerService ?? TimerService();
 
   // Getters
   GameState? get gameState => _gameState;
@@ -22,6 +27,7 @@ class GameProvider extends ChangeNotifier {
   bool get isGameWon => _gameState?.isWon ?? false;
   bool get isGameLost => _gameState?.isLost ?? false;
   bool get isPlaying => _gameState?.isPlaying ?? false;
+  TimerService get timerService => _timerService;
 
   // Initialize game
   Future<void> initializeGame(String difficulty) async {
@@ -30,6 +36,7 @@ class GameProvider extends ChangeNotifier {
       _clearError();
       
       _gameState = await _repository.initializeGame(difficulty);
+      _timerService.reset();
       notifyListeners();
     } catch (e) {
       _setError('Failed to initialize game: $e');
@@ -45,11 +52,17 @@ class GameProvider extends ChangeNotifier {
     try {
       _clearError();
       
+      // Start timer on first move
+      if (!_timerService.isRunning) {
+        _timerService.start();
+      }
+      
       _gameState = await _repository.revealCell(row, col);
       notifyListeners();
       
       // Check if game is over and show appropriate dialog
       if (isGameOver) {
+        _timerService.stop();
         _handleGameOver();
       }
     } catch (e) {
@@ -64,7 +77,16 @@ class GameProvider extends ChangeNotifier {
     try {
       _clearError();
       
+      // Start timer on first move
+      if (!_timerService.isRunning) {
+        _timerService.start();
+      }
+      
       _gameState = await _repository.toggleFlag(row, col);
+      
+      // Provide haptic feedback for flag toggle
+      HapticService.lightImpact();
+      
       notifyListeners();
     } catch (e) {
       _setError('Failed to toggle flag: $e');
@@ -80,6 +102,7 @@ class GameProvider extends ChangeNotifier {
       _clearError();
       
       _gameState = await _repository.resetGame();
+      _timerService.reset();
       notifyListeners();
     } catch (e) {
       _setError('Failed to reset game: $e');
@@ -90,7 +113,12 @@ class GameProvider extends ChangeNotifier {
 
   // Get game statistics
   Map<String, dynamic> getGameStatistics() {
-    return _repository.getGameStatistics();
+    final stats = _repository.getGameStatistics();
+    if (FeatureFlags.enableGameStatistics) {
+      stats['timerElapsed'] = _timerService.elapsed.inSeconds;
+      stats['timerRunning'] = _timerService.isRunning;
+    }
+    return stats;
   }
 
   // Get remaining mines
@@ -152,9 +180,9 @@ class GameProvider extends ChangeNotifier {
     // The provider just notifies that the game is over
   }
 
-  // Dispose method
   @override
   void dispose() {
+    _timerService.dispose();
     super.dispose();
   }
 } 

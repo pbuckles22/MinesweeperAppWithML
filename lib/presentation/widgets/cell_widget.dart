@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/entities/cell.dart';
 import '../providers/game_provider.dart';
+import '../../services/haptic_service.dart';
 
 class CellWidget extends StatelessWidget {
   final int row;
@@ -35,6 +36,7 @@ class CellWidget extends StatelessWidget {
           },
           onLongPress: () {
             if (gameProvider.isValidAction(row, col)) {
+              HapticService.mediumImpact();
               onLongPress();
             }
           },

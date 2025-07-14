@@ -4,9 +4,20 @@ import '../../domain/entities/cell.dart';
 import '../../domain/entities/game_state.dart';
 import '../providers/game_provider.dart';
 import 'cell_widget.dart';
+import '../../core/feature_flags.dart';
 
-class GameBoard extends StatelessWidget {
+class GameBoard extends StatefulWidget {
   const GameBoard({Key? key}) : super(key: key);
+
+  @override
+  State<GameBoard> createState() => _GameBoardState();
+}
+
+class _GameBoardState extends State<GameBoard> {
+  double _zoomLevel = 1.0;
+  static const double _minZoom = 0.5;
+  static const double _maxZoom = 2.0;
+  static const double _zoomStep = 0.1;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +35,9 @@ class GameBoard extends StatelessWidget {
           children: [
             // Game header with stats
             _buildGameHeader(context, gameProvider),
+            
+            // Zoom controls
+            _buildZoomControls(context),
             
             // Game board
             Expanded(
@@ -53,12 +67,18 @@ class GameBoard extends StatelessWidget {
             Icons.warning,
           ),
           
-          // Timer
-          _buildStatCard(
-            context,
-            'Time',
-            '${stats['gameDuration'] ?? 0}s',
-            Icons.timer,
+          // Timer with continuous updates
+          Consumer<GameProvider>(
+            builder: (context, provider, child) {
+              final elapsed = provider.timerService.elapsed;
+              final timeString = '${elapsed.inMinutes.toString().padLeft(2, '0')}:${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}';
+              return _buildStatCard(
+                context,
+                'Time',
+                timeString,
+                Icons.timer,
+              );
+            },
           ),
           
           // Progress
@@ -67,6 +87,34 @@ class GameBoard extends StatelessWidget {
             'Progress',
             _progressString(gameState.progressPercentage),
             Icons.bar_chart,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildZoomControls(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: _zoomOut,
+            icon: const Icon(Icons.zoom_out),
+            tooltip: 'Zoom Out',
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              '${(_zoomLevel * 100).toInt()}%',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          IconButton(
+            onPressed: _zoomIn,
+            icon: const Icon(Icons.zoom_in),
+            tooltip: 'Zoom In',
           ),
         ],
       ),
@@ -98,25 +146,44 @@ class GameBoard extends StatelessWidget {
   }
 
   Widget _buildBoard(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(8.0),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: gameState.columns,
-        childAspectRatio: 1.0,
+    return Transform.scale(
+      scale: _zoomLevel,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(8.0),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: gameState.columns,
+          childAspectRatio: 1.0,
+        ),
+        itemCount: gameState.rows * gameState.columns,
+        itemBuilder: (context, index) {
+          final row = index ~/ gameState.columns;
+          final col = index % gameState.columns;
+          
+          return CellWidget(
+            row: row,
+            col: col,
+            onTap: () => gameProvider.revealCell(row, col),
+            onLongPress: () => gameProvider.toggleFlag(row, col),
+          );
+        },
       ),
-      itemCount: gameState.rows * gameState.columns,
-      itemBuilder: (context, index) {
-        final row = index ~/ gameState.columns;
-        final col = index % gameState.columns;
-        
-        return CellWidget(
-          row: row,
-          col: col,
-          onTap: () => gameProvider.revealCell(row, col),
-          onLongPress: () => gameProvider.toggleFlag(row, col),
-        );
-      },
     );
+  }
+
+  void _zoomIn() {
+    if (_zoomLevel < _maxZoom) {
+      setState(() {
+        _zoomLevel = (_zoomLevel + _zoomStep).clamp(_minZoom, _maxZoom);
+      });
+    }
+  }
+
+  void _zoomOut() {
+    if (_zoomLevel > _minZoom) {
+      setState(() {
+        _zoomLevel = (_zoomLevel - _zoomStep).clamp(_minZoom, _maxZoom);
+      });
+    }
   }
 
   String _progressString(double progress) {

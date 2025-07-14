@@ -2,7 +2,7 @@
 class FeatureFlags {
   // Core game features
   static const bool enableFirstClickGuarantee = false; // TODO: Implement first click guarantee
-  static const bool enableGameStatistics = false; // TODO: Implement game statistics and timer
+  static const bool enableGameStatistics = true; // TODO: Implement game statistics and timer
   static const bool enableBoardReset = false; // TODO: Implement board reset functionality
   static const bool enableCustomDifficulty = false; // TODO: Implement custom difficulty settings
   
@@ -16,7 +16,7 @@ class FeatureFlags {
   static const bool enableDarkMode = false; // TODO: Implement dark mode
   static const bool enableAnimations = false; // TODO: Implement smooth animations
   static const bool enableSoundEffects = false; // TODO: Implement sound effects
-  static const bool enableHapticFeedback = false; // TODO: Implement haptic feedback
+  static const bool enableHapticFeedback = true; // TODO: Implement haptic feedback
   
   // ML/AI features (for future integration)
   static const bool enableMLAssistance = false; // TODO: Implement ML-powered assistance
