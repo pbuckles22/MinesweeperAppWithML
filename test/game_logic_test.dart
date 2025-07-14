@@ -835,5 +835,426 @@ void main() {
         expect(loseBoard[0][0].isExploded, true);
       });
     });
+
+    group('Performance & Scale Edge Cases', () {
+      test('should handle expert level board (16x30 with 99 mines)', () async {
+        final repository = GameRepositoryImpl();
+        final gameState = await repository.initializeGame('expert');
+        
+        expect(gameState.rows, 16);
+        expect(gameState.columns, 30);
+        expect(gameState.minesCount, 99);
+        expect(gameState.totalCells, 480);
+        
+        // Count actual mines
+        int mineCount = 0;
+        for (int row = 0; row < gameState.rows; row++) {
+          for (int col = 0; col < gameState.columns; col++) {
+            if (gameState.getCell(row, col).hasBomb) {
+              mineCount++;
+            }
+          }
+        }
+        expect(mineCount, 99);
+        
+        // Test that we can reveal a cell without performance issues
+        final startTime = DateTime.now();
+        final result = await repository.revealCell(0, 0);
+        final endTime = DateTime.now();
+        final duration = endTime.difference(startTime);
+        
+        // Should complete within reasonable time (less than 1 second)
+        expect(duration.inMilliseconds, lessThan(1000));
+        expect(result.getCell(0, 0).isRevealed, true);
+      });
+
+      test('should handle large cascade efficiently', () async {
+        final repository = GameRepositoryImpl();
+        // Create a large board with no mines to test cascade performance
+        final board = List.generate(20, (row) => 
+          List.generate(20, (col) => 
+            Cell(row: row, col: col, hasBomb: false).copyWith(bombsAround: 0)
+          )
+        );
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 0,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 400,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Test cascade performance on large empty area
+        final startTime = DateTime.now();
+        final result = await repository.revealCell(10, 10);
+        final endTime = DateTime.now();
+        final duration = endTime.difference(startTime);
+        
+        // Should complete within reasonable time (less than 500ms)
+        expect(duration.inMilliseconds, lessThan(500));
+        
+        // All cells should be revealed
+        expect(result.revealedCount, 400);
+      });
+
+      test('should handle chording on complex board efficiently', () async {
+        final repository = GameRepositoryImpl();
+        // Create a complex board with many numbered cells
+        final board = List.generate(15, (row) => 
+          List.generate(15, (col) => 
+            Cell(row: row, col: col, hasBomb: false).copyWith(bombsAround: 1)
+          )
+        );
+        
+        // Add some mines in corners
+        board[0][0] = board[0][0].copyWith(hasBomb: true);
+        board[0][1] = board[0][1].copyWith(hasBomb: true);
+        board[1][0] = board[1][0].copyWith(hasBomb: true);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 3,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 225,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal a numbered cell
+        final revealedState = await repository.revealCell(1, 1);
+        
+        // Flag the mines
+        await repository.toggleFlag(0, 0);
+        await repository.toggleFlag(0, 1);
+        await repository.toggleFlag(1, 0);
+        
+        // Test chording performance
+        final startTime = DateTime.now();
+        final chordedState = await repository.chordCell(1, 1);
+        final endTime = DateTime.now();
+        final duration = endTime.difference(startTime);
+        
+        // Should complete within reasonable time (less than 500ms)
+        expect(duration.inMilliseconds, lessThan(500));
+      });
+    });
+
+    group('Extreme Boundary Edge Cases', () {
+      test('should handle 1x1 board correctly', () async {
+        final repository = GameRepositoryImpl();
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false)],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 0,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 1,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        final result = await repository.revealCell(0, 0);
+        expect(result.getCell(0, 0).isRevealed, true);
+        expect(result.isWon, true);
+      });
+
+      test('should handle 1xN board (very thin board)', () async {
+        final repository = GameRepositoryImpl();
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false), Cell(row: 0, col: 1, hasBomb: false), Cell(row: 0, col: 2, hasBomb: false)],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 0,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 3,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        final result = await repository.revealCell(0, 1);
+        expect(result.getCell(0, 0).isRevealed, true);
+        expect(result.getCell(0, 1).isRevealed, true);
+        expect(result.getCell(0, 2).isRevealed, true);
+        expect(result.isWon, true);
+      });
+
+      test('should handle Nx1 board (very tall board)', () async {
+        final repository = GameRepositoryImpl();
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false)],
+          [Cell(row: 2, col: 0, hasBomb: false)],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 0,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 3,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        final result = await repository.revealCell(1, 0);
+        expect(result.getCell(0, 0).isRevealed, true);
+        expect(result.getCell(1, 0).isRevealed, true);
+        expect(result.getCell(2, 0).isRevealed, true);
+        expect(result.isWon, true);
+      });
+
+      test('should handle maximum mine density board', () async {
+        final repository = GameRepositoryImpl();
+        // Create a 3x3 board with 8 mines (maximum density)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: true), Cell(row: 0, col: 2, hasBomb: true)],
+          [Cell(row: 1, col: 0, hasBomb: true), Cell(row: 1, col: 1, hasBomb: false), Cell(row: 1, col: 2, hasBomb: true)],
+          [Cell(row: 2, col: 0, hasBomb: true), Cell(row: 2, col: 1, hasBomb: true), Cell(row: 2, col: 2, hasBomb: true)],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 8,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal the only safe cell
+        final result = await repository.revealCell(1, 1);
+        expect(result.getCell(1, 1).isRevealed, true);
+        expect(result.isWon, true);
+        
+        // All mines should remain unrevealed
+        for (int row = 0; row < 3; row++) {
+          for (int col = 0; col < 3; col++) {
+            if (row != 1 || col != 1) {
+              expect(result.getCell(row, col).isRevealed, false);
+            }
+          }
+        }
+      });
+
+      test('should handle minimum mine density board', () async {
+        final repository = GameRepositoryImpl();
+        // Create a 5x5 board with only 1 mine
+        final board = List.generate(5, (row) => 
+          List.generate(5, (col) => 
+            Cell(row: row, col: col, hasBomb: false)
+          )
+        );
+        
+        // Place one mine in the center
+        board[2][2] = board[2][2].copyWith(hasBomb: true);
+        
+        // Calculate bomb counts
+        for (int row = 0; row < 5; row++) {
+          for (int col = 0; col < 5; col++) {
+            if (!board[row][col].hasBomb) {
+              int count = 0;
+              for (int dr = -1; dr <= 1; dr++) {
+                for (int dc = -1; dc <= 1; dc++) {
+                  if (dr == 0 && dc == 0) continue;
+                  final nr = row + dr;
+                  final nc = col + dc;
+                  if (nr >= 0 && nr < 5 && nc >= 0 && nc < 5) {
+                    if (board[nr][nc].hasBomb) count++;
+                  }
+                }
+              }
+              board[row][col] = board[row][col].copyWith(bombsAround: count);
+            }
+          }
+        }
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 25,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal a corner cell - should cascade to most of the board
+        final result = await repository.revealCell(0, 0);
+        expect(result.getCell(0, 0).isRevealed, true);
+        
+        // Most cells should be revealed (except the mine and its immediate neighbors)
+        expect(result.revealedCount, greaterThan(20));
+      });
+    });
+
+    group('Input Validation Edge Cases', () {
+      test('should handle invalid coordinates gracefully', () async {
+        final repository = GameRepositoryImpl();
+        await repository.initializeGame('beginner');
+        
+        // Test negative coordinates
+        expect(() => repository.revealCell(-1, 0), throwsA(isA<RangeError>()));
+        expect(() => repository.revealCell(0, -1), throwsA(isA<RangeError>()));
+        expect(() => repository.toggleFlag(-1, 0), throwsA(isA<RangeError>()));
+        expect(() => repository.toggleFlag(0, -1), throwsA(isA<RangeError>()));
+        expect(() => repository.chordCell(-1, 0), throwsA(isA<RangeError>()));
+        expect(() => repository.chordCell(0, -1), throwsA(isA<RangeError>()));
+        
+        // Test out of bounds coordinates
+        expect(() => repository.revealCell(10, 0), throwsA(isA<RangeError>()));
+        expect(() => repository.revealCell(0, 10), throwsA(isA<RangeError>()));
+        expect(() => repository.toggleFlag(10, 0), throwsA(isA<RangeError>()));
+        expect(() => repository.toggleFlag(0, 10), throwsA(isA<RangeError>()));
+        expect(() => repository.chordCell(10, 0), throwsA(isA<RangeError>()));
+        expect(() => repository.chordCell(0, 10), throwsA(isA<RangeError>()));
+      });
+
+      test('should handle operations on uninitialized game', () async {
+        final repository = GameRepositoryImpl();
+        
+        // Test operations without initializing game
+        expect(() => repository.getCurrentState(), throwsA(isA<StateError>()));
+        expect(repository.isGameWon(), false);
+        expect(repository.isGameLost(), false);
+        expect(repository.getRemainingMines(), 0);
+      });
+
+      test('should handle operations after game over', () async {
+        final repository = GameRepositoryImpl();
+        await repository.initializeGame('beginner');
+        
+        // Find and reveal a bomb to end the game
+        int bombRow = -1, bombCol = -1;
+        for (int row = 0; row < 9; row++) {
+          for (int col = 0; col < 9; col++) {
+            if (repository.getCurrentState().getCell(row, col).hasBomb) {
+              bombRow = row;
+              bombCol = col;
+              break;
+            }
+          }
+          if (bombRow != -1) break;
+        }
+        
+        final gameOverState = await repository.revealCell(bombRow, bombCol);
+        expect(gameOverState.isGameOver, true);
+        
+        // Test that operations after game over return the same state
+        final revealAfterGameOver = await repository.revealCell(0, 0);
+        expect(revealAfterGameOver.isGameOver, true);
+        expect(revealAfterGameOver.gameStatus, gameOverState.gameStatus);
+        
+        final flagAfterGameOver = await repository.toggleFlag(0, 0);
+        expect(flagAfterGameOver.isGameOver, true);
+        expect(flagAfterGameOver.gameStatus, gameOverState.gameStatus);
+        
+        final chordAfterGameOver = await repository.chordCell(0, 0);
+        expect(chordAfterGameOver.isGameOver, true);
+        expect(chordAfterGameOver.gameStatus, gameOverState.gameStatus);
+      });
+    });
+
+    group('Stress Testing Edge Cases', () {
+      test('should handle rapid operations without state corruption', () async {
+        final repository = GameRepositoryImpl();
+        await repository.initializeGame('beginner');
+        
+        // Perform rapid operations
+        final futures = <Future<GameState>>[];
+        for (int i = 0; i < 10; i++) {
+          futures.add(repository.revealCell(0, 0));
+          futures.add(repository.toggleFlag(1, 1));
+        }
+        
+        // Wait for all operations to complete
+        final results = await Future.wait(futures);
+        
+        // All results should be valid game states
+        for (final result in results) {
+          expect(result, isA<GameState>());
+          expect(result.board, isNotEmpty);
+        }
+      });
+
+      test('should handle multiple chording operations in sequence', () async {
+        final repository = GameRepositoryImpl();
+        // Create a board with multiple numbered cells
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: false), Cell(row: 0, col: 1, hasBomb: true), Cell(row: 0, col: 2, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: true), Cell(row: 1, col: 1, hasBomb: false), Cell(row: 1, col: 2, hasBomb: true)],
+          [Cell(row: 2, col: 0, hasBomb: false), Cell(row: 2, col: 1, hasBomb: true), Cell(row: 2, col: 2, hasBomb: false)],
+        ];
+        
+        // Set bomb counts
+        board[0][0] = board[0][0].copyWith(bombsAround: 2);
+        board[0][2] = board[0][2].copyWith(bombsAround: 2);
+        board[1][1] = board[1][1].copyWith(bombsAround: 4);
+        board[2][0] = board[2][0].copyWith(bombsAround: 2);
+        board[2][2] = board[2][2].copyWith(bombsAround: 2);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 5,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal numbered cells
+        await repository.revealCell(0, 0);
+        await repository.revealCell(0, 2);
+        await repository.revealCell(1, 1);
+        await repository.revealCell(2, 0);
+        await repository.revealCell(2, 2);
+        
+        // Flag mines
+        await repository.toggleFlag(0, 1);
+        await repository.toggleFlag(1, 0);
+        await repository.toggleFlag(1, 2);
+        await repository.toggleFlag(2, 1);
+        
+        // Perform multiple chording operations
+        final chordResults = <GameState>[];
+        chordResults.add(await repository.chordCell(0, 0));
+        chordResults.add(await repository.chordCell(0, 2));
+        chordResults.add(await repository.chordCell(1, 1));
+        chordResults.add(await repository.chordCell(2, 0));
+        chordResults.add(await repository.chordCell(2, 2));
+        
+        // All results should be valid
+        for (final result in chordResults) {
+          expect(result, isA<GameState>());
+        }
+      });
+    });
   });
 } 
