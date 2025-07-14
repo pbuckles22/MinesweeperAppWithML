@@ -683,11 +683,34 @@ void main() {
 
     group('Edge Cases', () {
       test('revealing a cell after game over does nothing', () async {
-        // 2x2 board, one mine at (0,0)
+        // Create a deterministic 2x2 board with one mine at (0,0)
         final repository = GameRepositoryImpl();
-        await repository.initializeGame('custom');
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false)],
+        ];
+        
+        // Set bombsAround values
+        board[0][1] = board[0][1].copyWith(bombsAround: 1);
+        board[1][0] = board[1][0].copyWith(bombsAround: 1);
+        board[1][1] = board[1][1].copyWith(bombsAround: 1);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 4,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
         // Simulate game over by revealing the bomb
         await repository.revealCell(0, 0); // triggers game over
+        expect(repository.getCurrentState().isGameOver, true);
+        
         // Try to reveal another cell after game over
         final prevState = repository.getCurrentState().getCell(0, 1).isRevealed;
         await repository.revealCell(0, 1);

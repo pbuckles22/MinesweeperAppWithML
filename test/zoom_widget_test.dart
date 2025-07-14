@@ -22,43 +22,47 @@ void main() {
     expect(zoomInButton, findsOneWidget);
     expect(zoomOutButton, findsOneWidget);
 
-    // Find all SizedBox widgets and find the one with calculated dimensions
-    final sizedBoxes = find.byType(SizedBox);
-    expect(sizedBoxes, findsWidgets);
+    // Find the Container that holds the board (with calculated dimensions)
+    final containers = find.byType(Container);
+    expect(containers, findsWidgets);
     
-    // Find the SizedBox that has both width and height set (the board container)
-    SizedBox? boardSizedBox;
-    for (final sizedBox in sizedBoxes.evaluate()) {
-      final widget = sizedBox.widget as SizedBox;
-      if (widget.width != null && widget.height != null && 
-          widget.width! > 100 && widget.height! > 100) {
-        boardSizedBox = widget;
+    // Find the Container that has both width and height set (the board container)
+    Container? boardContainer;
+    for (final container in containers.evaluate()) {
+      final widget = container.widget as Container;
+      final constraints = widget.constraints;
+      if (constraints != null && 
+          constraints.maxWidth.isFinite && constraints.maxHeight.isFinite &&
+          constraints.maxWidth > 100 && constraints.maxHeight > 100) {
+        boardContainer = widget;
         break;
       }
     }
     
-    expect(boardSizedBox, isNotNull);
-    double initialWidth = boardSizedBox!.width!;
-    double initialHeight = boardSizedBox.height!;
+    expect(boardContainer, isNotNull);
+    double initialWidth = boardContainer!.constraints!.maxWidth;
+    double initialHeight = boardContainer.constraints!.maxHeight;
 
     // Tap zoom in
     await tester.tap(zoomInButton);
     await tester.pumpAndSettle();
     
-    // Find the updated SizedBox
-    SizedBox? zoomedInSizedBox;
-    for (final sizedBox in sizedBoxes.evaluate()) {
-      final widget = sizedBox.widget as SizedBox;
-      if (widget.width != null && widget.height != null && 
-          widget.width! > 100 && widget.height! > 100) {
-        zoomedInSizedBox = widget;
+    // Find the updated Container
+    Container? zoomedInContainer;
+    for (final container in containers.evaluate()) {
+      final widget = container.widget as Container;
+      final constraints = widget.constraints;
+      if (constraints != null && 
+          constraints.maxWidth.isFinite && constraints.maxHeight.isFinite &&
+          constraints.maxWidth > 100 && constraints.maxHeight > 100) {
+        zoomedInContainer = widget;
         break;
       }
     }
     
-    expect(zoomedInSizedBox, isNotNull);
-    double zoomedInWidth = zoomedInSizedBox!.width!;
-    double zoomedInHeight = zoomedInSizedBox.height!;
+    expect(zoomedInContainer, isNotNull);
+    double zoomedInWidth = zoomedInContainer!.constraints!.maxWidth;
+    double zoomedInHeight = zoomedInContainer.constraints!.maxHeight;
     expect(zoomedInWidth, greaterThan(initialWidth));
     expect(zoomedInHeight, greaterThan(initialHeight));
 
@@ -66,20 +70,22 @@ void main() {
     await tester.tap(zoomOutButton);
     await tester.pumpAndSettle();
     
-    // Find the updated SizedBox again
-    SizedBox? zoomedOutSizedBox;
-    for (final sizedBox in sizedBoxes.evaluate()) {
-      final widget = sizedBox.widget as SizedBox;
-      if (widget.width != null && widget.height != null && 
-          widget.width! > 100 && widget.height! > 100) {
-        zoomedOutSizedBox = widget;
+    // Find the updated Container again
+    Container? zoomedOutContainer;
+    for (final container in containers.evaluate()) {
+      final widget = container.widget as Container;
+      final constraints = widget.constraints;
+      if (constraints != null && 
+          constraints.maxWidth.isFinite && constraints.maxHeight.isFinite &&
+          constraints.maxWidth > 100 && constraints.maxHeight > 100) {
+        zoomedOutContainer = widget;
         break;
       }
     }
     
-    expect(zoomedOutSizedBox, isNotNull);
-    double zoomedOutWidth = zoomedOutSizedBox!.width!;
-    double zoomedOutHeight = zoomedOutSizedBox.height!;
+    expect(zoomedOutContainer, isNotNull);
+    double zoomedOutWidth = zoomedOutContainer!.constraints!.maxWidth;
+    double zoomedOutHeight = zoomedOutContainer.constraints!.maxHeight;
     expect(zoomedOutWidth, lessThanOrEqualTo(zoomedInWidth));
     expect(zoomedOutHeight, lessThanOrEqualTo(zoomedInHeight));
   });

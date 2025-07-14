@@ -52,7 +52,7 @@ class GameRepositoryImpl implements GameRepository {
     }
     
     if (!_currentState!.isValidPosition(row, col)) {
-      throw RangeError('Invalid position ([0;31m$row[0m, [0;31m$col[0m)');
+      throw RangeError('Invalid position ($row, $col)');
     }
     
     final cell = _currentState!.getCell(row, col);
@@ -63,6 +63,9 @@ class GameRepositoryImpl implements GameRepository {
     // Create a copy of the board to modify
     final newBoard = _copyBoard(_currentState!.board);
     final targetCell = newBoard[row][col];
+    
+    // Check if cell is empty BEFORE revealing it
+    final wasEmpty = !targetCell.hasBomb && targetCell.bombsAround == 0;
     
     // Reveal the cell
     targetCell.reveal();
@@ -77,14 +80,13 @@ class GameRepositoryImpl implements GameRepository {
       );
     } else {
       // Safe reveal - cascade if empty
-      final wasEmpty = targetCell.isEmpty;
       if (wasEmpty) {
         print('Cell is empty, calling cascade');
-        print('Target cell state: hasBomb=[0;33m${targetCell.hasBomb}[0m, bombsAround=[0;33m${targetCell.bombsAround}[0m, isEmpty=[0;33m${targetCell.isEmpty}[0m');
+        print('Target cell state: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}, isEmpty=$wasEmpty');
         _cascadeReveal(newBoard, row, col);
       } else {
         print('Cell is not empty, not calling cascade');
-        print('Target cell state: hasBomb=[0;33m${targetCell.hasBomb}[0m, bombsAround=[0;33m${targetCell.bombsAround}[0m, isEmpty=[0;33m${targetCell.isEmpty}[0m');
+        print('Target cell state: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}, isEmpty=$wasEmpty');
       }
       // Count revealed and flagged cells
       final counts = _countCells(newBoard);
