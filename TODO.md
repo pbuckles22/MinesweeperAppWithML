@@ -22,6 +22,9 @@
 - All edge cases and error handling
 - Performance validation for large boards
 
+### ❌ Known Issues:
+- **Android APK build still failing** - Gradle plugin configuration needs further fixes
+
 ## 📋 Next Priority Features
 
 ### **1. First Click Guarantee** (Feature Flag: `enableFirstClickGuarantee`)
@@ -72,10 +75,11 @@
 
 ## 🎯 Immediate Next Steps
 
-1. **Enable First Click Guarantee** - Set `enableFirstClickGuarantee = true` and implement
-2. **Add tests for first click guarantee**
-3. **Update UI to reflect new behavior**
-4. **Test manually to ensure smooth gameplay**
+1. **Fix Android APK build** - Resolve remaining Gradle plugin configuration issues
+2. **Enable First Click Guarantee** - Set `enableFirstClickGuarantee = true` and implement
+3. **Add tests for first click guarantee**
+4. **Update UI to reflect new behavior**
+5. **Test manually to ensure smooth gameplay**
 
 ---
 
