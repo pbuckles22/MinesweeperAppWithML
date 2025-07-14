@@ -48,11 +48,11 @@ class GameRepositoryImpl implements GameRepository {
   @override
   Future<GameState> revealCell(int row, int col) async {
     if (_currentState == null || _currentState!.isGameOver) {
-      throw StateError('Game not initialized or already over');
+      return _currentState!; // No action if game is over
     }
     
     if (!_currentState!.isValidPosition(row, col)) {
-      throw RangeError('Invalid position ($row, $col)');
+      throw RangeError('Invalid position ([0;31m$row[0m, [0;31m$col[0m)');
     }
     
     final cell = _currentState!.getCell(row, col);
@@ -62,12 +62,12 @@ class GameRepositoryImpl implements GameRepository {
     
     // Create a copy of the board to modify
     final newBoard = _copyBoard(_currentState!.board);
-    final newCell = newBoard[row][col];
+    final targetCell = newBoard[row][col];
     
     // Reveal the cell
-    newCell.reveal();
+    targetCell.reveal();
     
-    if (newCell.isExploded) {
+    if (targetCell.isExploded) {
       // Game over - reveal all mines
       _revealAllMines(newBoard);
       _currentState = _currentState!.copyWith(
@@ -77,17 +77,19 @@ class GameRepositoryImpl implements GameRepository {
       );
     } else {
       // Safe reveal - cascade if empty
-      if (newCell.isEmpty) {
+      final wasEmpty = targetCell.isEmpty;
+      if (wasEmpty) {
         print('Cell is empty, calling cascade');
+        print('Target cell state: hasBomb=[0;33m${targetCell.hasBomb}[0m, bombsAround=[0;33m${targetCell.bombsAround}[0m, isEmpty=[0;33m${targetCell.isEmpty}[0m');
         _cascadeReveal(newBoard, row, col);
+      } else {
+        print('Cell is not empty, not calling cascade');
+        print('Target cell state: hasBomb=[0;33m${targetCell.hasBomb}[0m, bombsAround=[0;33m${targetCell.bombsAround}[0m, isEmpty=[0;33m${targetCell.isEmpty}[0m');
       }
-      
       // Count revealed and flagged cells
       final counts = _countCells(newBoard);
-      
       // Check for win
       final isWon = counts['revealed'] == (_currentState!.totalCells - _currentState!.minesCount);
-      
       _currentState = _currentState!.copyWith(
         board: newBoard,
         gameStatus: isWon ? GameConstants.gameStateWon : GameConstants.gameStatePlaying,
@@ -103,7 +105,7 @@ class GameRepositoryImpl implements GameRepository {
   @override
   Future<GameState> toggleFlag(int row, int col) async {
     if (_currentState == null || _currentState!.isGameOver) {
-      throw StateError('Game not initialized or already over');
+      return _currentState!; // No action if game is over
     }
     
     if (!_currentState!.isValidPosition(row, col)) {
@@ -185,6 +187,11 @@ class GameRepositoryImpl implements GameRepository {
     return await initializeGame(_currentState!.difficulty);
   }
 
+  // TEST ONLY: Set a custom game state for deterministic tests
+  void setTestState(GameState state) {
+    _currentState = state;
+  }
+
   // Private helper methods
 
   int _calculateMines(int rows, int columns) {
@@ -243,29 +250,75 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   // Public for testing
-  void revealCascade(List<List<Cell>> board, int row, int col) {
-    if (row < 0 || row >= board.length || col < 0 || col >= board[0].length) return;
-    final cell = board[row][col];
-    if (cell.isRevealed || cell.isFlagged) return;
-    print('Revealing cell at ($row, $col), isEmpty: ${cell.isEmpty}');
-    cell.reveal();
-    if (cell.isEmpty) {
-      print('Cell is empty, checking neighbors...');
+  void revealCascade(List<List<Cell>> board, int row, int col, {bool gameOver = false}) {
+    if (gameOver) return;
+    
+    final rows = board.length;
+    final cols = board[0].length;
+    final queue = <List<int>>[];
+    final visited = List.generate(rows, (_) => List.generate(cols, (_) => false));
+    
+    // Mark initial cell as visited since it's already revealed
+    visited[row][col] = true;
+    
+    // Check if initial cell is blank and add its neighbors to queue
+    final initialCell = board[row][col];
+    if (!initialCell.hasBomb && initialCell.bombsAround == 0) {
+      // Check all 8 neighbors of initial cell
       for (int dr = -1; dr <= 1; dr++) {
         for (int dc = -1; dc <= 1; dc++) {
-          if (dr == 0 && dc == 0) continue;
+          if (dr == 0 && dc == 0) continue; // Skip self
+          
           final nr = row + dr;
           final nc = col + dc;
-          if (nr < 0 || nr >= board.length || nc < 0 || nc >= board[0].length) continue;
+          
+          // Check bounds
+          if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+          
+          // Skip if already visited
+          if (visited[nr][nc]) continue;
+          
           final neighbor = board[nr][nc];
-          print('Checking neighbor at ($nr, $nc): isRevealed=${neighbor.isRevealed}, isFlagged=${neighbor.isFlagged}');
-          if (!neighbor.isRevealed && !neighbor.isFlagged) {
-            print('Revealing neighbor at ($nr, $nc)');
-            neighbor.reveal();
-            if (neighbor.isEmpty) {
-              print('Neighbor is empty, recursing...');
-              revealCascade(board, nr, nc);
-            }
+          
+          // Add to queue (don't mark as visited yet)
+          queue.add([nr, nc]);
+        }
+      }
+    }
+    
+    // Process queue
+    while (queue.isNotEmpty) {
+      final pos = queue.removeAt(0);
+      final r = pos[0], c = pos[1];
+      final cell = board[r][c];
+      
+      // Skip if already visited, revealed, or flagged
+      if (visited[r][c] || cell.isRevealed || cell.isFlagged) continue;
+      
+      // Mark as visited and reveal the cell
+      visited[r][c] = true;
+      cell.reveal();
+      
+      // If cell is blank (no bomb, no adjacent bombs), add its neighbors to queue
+      if (!cell.hasBomb && cell.bombsAround == 0) {
+        // Check all 8 neighbors
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            if (dr == 0 && dc == 0) continue; // Skip self
+            
+            final nr = r + dr;
+            final nc = c + dc;
+            
+            // Check bounds
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            
+            // Skip if already visited
+            if (visited[nr][nc]) continue;
+            
+            final neighbor = board[nr][nc];
+            
+            // Add to queue (don't mark as visited yet)
+            queue.add([nr, nc]);
           }
         }
       }
