@@ -54,6 +54,7 @@ flutter:
     - images/bomb.png
     - images/facingDown.png
     - images/flagged.png
+    - assets/config/game_modes.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

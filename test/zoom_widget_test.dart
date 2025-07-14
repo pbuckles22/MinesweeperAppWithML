@@ -4,8 +4,16 @@ import 'package:flutter_minesweeper/presentation/pages/game_page.dart';
 import 'package:flutter_minesweeper/presentation/providers/game_provider.dart';
 import 'package:flutter_minesweeper/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_minesweeper/core/game_mode_config.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  
+  setUpAll(() async {
+    // Load config once for all tests
+    await GameModeConfig.instance.loadGameModes();
+  });
+  
   testWidgets('Zoom controls change board scale', (WidgetTester tester) async {
     await tester.pumpWidget(
       MultiProvider(
@@ -20,7 +28,12 @@ void main() {
     // Wait for the board to load
     await tester.pumpAndSettle();
 
-    // Find the zoom in and zoom out buttons (now positioned at top-right)
+    // Initialize the game first
+    final gameProvider = tester.element(find.byType(GamePage)).read<GameProvider>();
+    await gameProvider.initializeGame('easy');
+    await tester.pumpAndSettle();
+
+    // Find the zoom in and zoom out buttons
     final zoomInButton = find.byIcon(Icons.zoom_in);
     final zoomOutButton = find.byIcon(Icons.zoom_out);
     expect(zoomInButton, findsOneWidget);
@@ -106,6 +119,11 @@ void main() {
     );
 
     // Wait for the board to load
+    await tester.pumpAndSettle();
+
+    // Initialize the game first
+    final gameProvider = tester.element(find.byType(GamePage)).read<GameProvider>();
+    await gameProvider.initializeGame('easy');
     await tester.pumpAndSettle();
 
     // Find zoom controls

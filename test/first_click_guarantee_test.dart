@@ -3,8 +3,14 @@ import 'package:flutter_minesweeper/data/repositories/game_repository_impl.dart'
 import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/domain/entities/cell.dart';
 import 'package:flutter_minesweeper/core/feature_flags.dart';
+import 'test_helper.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    await setupTestEnvironment();
+  });
+
   group('First Click Guarantee Tests', () {
     late GameRepositoryImpl repository;
 

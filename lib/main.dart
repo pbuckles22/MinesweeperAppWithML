@@ -3,8 +3,14 @@ import 'package:provider/provider.dart';
 import 'presentation/providers/game_provider.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/pages/game_page.dart';
+import 'core/game_mode_config.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize game mode configuration
+  await GameModeConfig.instance.loadGameModes();
+  
   runApp(const MinesweeperApp());
 }
 

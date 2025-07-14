@@ -3,6 +3,7 @@ import 'package:flutter_minesweeper/services/timer_service.dart';
 import 'dart:async';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('TimerService', () {
     late TimerService timerService;
 

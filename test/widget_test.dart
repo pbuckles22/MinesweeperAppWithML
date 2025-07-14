@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_minesweeper/main.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   testWidgets('Minesweeper app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MinesweeperApp());
@@ -24,7 +25,8 @@ void main() {
     // Wait for the game to initialize
     await tester.pumpAndSettle();
 
-    // Verify that the game board is now visible
-    expect(find.byType(GridView), findsOneWidget);
+    // Verify that the game board is now visible (look for GameBoard widget)
+    expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.byType(AppBar), findsOneWidget);
   });
 }

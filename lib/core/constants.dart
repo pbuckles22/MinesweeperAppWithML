@@ -1,3 +1,5 @@
+import 'game_mode_config.dart';
+
 class GameConstants {
   // Board dimensions
   static const int defaultRowCount = 18;
@@ -7,34 +9,10 @@ class GameConstants {
   static const int defaultBombProbability = 3;
   static const int defaultMaxProbability = 15;
   
-  // Difficulty levels
-  static const Map<String, Map<String, int>> difficultyLevels = {
-    'easy': {
-      'rows': 9,
-      'columns': 9,
-      'mines': 10,
-    },
-    'normal': {
-      'rows': 16,
-      'columns': 16,
-      'mines': 40,
-    },
-    'hard': {
-      'rows': 16,
-      'columns': 30,
-      'mines': 99,
-    },
-    'expert': {
-      'rows': 18,
-      'columns': 24,
-      'mines': 115,
-    },
-    'custom': {
-      'rows': defaultRowCount,
-      'columns': defaultColumnCount,
-      'mines': 0, // Calculated based on probability
-    },
-  };
+  // Difficulty levels - now dynamically loaded from GameModeConfig
+  static Map<String, Map<String, int>> get difficultyLevels {
+    return GameModeConfig.instance.difficultyLevels;
+  }
   
   // Game states
   static const String gameStatePlaying = 'playing';

@@ -3,10 +3,18 @@ import 'package:flutter_minesweeper/data/repositories/game_repository_impl.dart'
 import 'package:flutter_minesweeper/domain/entities/cell.dart';
 import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/core/constants.dart';
+import 'test_helper.dart';
+import 'package:flutter_minesweeper/core/game_mode_config.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Game Logic Tests', () {
     late GameRepositoryImpl repository;
+
+    setUpAll(() async {
+      await setupTestEnvironment();
+      await GameModeConfig.instance.loadGameModes();
+    });
 
     setUp(() {
       repository = GameRepositoryImpl();

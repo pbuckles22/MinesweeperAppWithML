@@ -1,0 +1,56 @@
+{
+  "game_modes": [
+    {
+      "id": "easy",
+      "name": "Easy",
+      "description": "9×9 grid, 10 mines",
+      "rows": 9,
+      "columns": 9,
+      "mines": 10,
+      "enabled": true
+    },
+    {
+      "id": "normal",
+      "name": "Normal", 
+      "description": "16×16 grid, 40 mines",
+      "rows": 16,
+      "columns": 16,
+      "mines": 40,
+      "enabled": true
+    },
+    {
+      "id": "hard",
+      "name": "Hard",
+      "description": "16×30 grid, 99 mines", 
+      "rows": 16,
+      "columns": 30,
+      "mines": 99,
+      "enabled": true
+    },
+    {
+      "id": "expert",
+      "name": "Expert",
+      "description": "18×24 grid, 115 mines",
+      "rows": 18,
+      "columns": 24,
+      "mines": 115,
+      "enabled": true
+    },
+    {
+      "id": "custom",
+      "name": "Custom",
+      "description": "Custom grid size and mine count",
+      "rows": 18,
+      "columns": 10,
+      "mines": 0,
+      "enabled": false
+    }
+  ],
+  "default_mode": "easy",
+  "custom_settings": {
+    "default_rows": 18,
+    "default_columns": 10,
+    "default_bomb_probability": 3,
+    "max_probability": 15
+  }
+} 

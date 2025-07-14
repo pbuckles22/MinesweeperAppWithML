@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/game_provider.dart';
+import '../../core/game_mode_config.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -159,52 +160,43 @@ class SettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             
-            // Easy
-            _buildDifficultyOption(
-              context,
-              settingsProvider,
-              'Easy',
-              '9×9 grid, 10 mines',
-              'easy',
-              Icons.sentiment_satisfied,
-            ),
-            const SizedBox(height: 8),
-            
-            // Normal
-            _buildDifficultyOption(
-              context,
-              settingsProvider,
-              'Normal',
-              '16×16 grid, 40 mines',
-              'normal',
-              Icons.sentiment_neutral,
-            ),
-            const SizedBox(height: 8),
-            
-            // Hard
-            _buildDifficultyOption(
-              context,
-              settingsProvider,
-              'Hard',
-              '16×30 grid, 99 mines',
-              'hard',
-              Icons.sentiment_dissatisfied,
-            ),
-            const SizedBox(height: 8),
-            
-            // Expert
-            _buildDifficultyOption(
-              context,
-              settingsProvider,
-              'Expert',
-              '18×24 grid, 115 mines',
-              'expert',
-              Icons.warning,
-            ),
+            // Dynamic difficulty options from JSON config
+            ...GameModeConfig.instance.enabledGameModes.map((mode) {
+              return Column(
+                children: [
+                  _buildDifficultyOption(
+                    context,
+                    settingsProvider,
+                    mode.name,
+                    mode.description,
+                    mode.id,
+                    _getDifficultyIcon(mode.id),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              );
+            }).toList(),
           ],
         ),
       ),
     );
+  }
+
+  IconData _getDifficultyIcon(String difficultyId) {
+    switch (difficultyId) {
+      case 'easy':
+        return Icons.sentiment_satisfied;
+      case 'normal':
+        return Icons.sentiment_neutral;
+      case 'hard':
+        return Icons.sentiment_dissatisfied;
+      case 'expert':
+        return Icons.warning;
+      case 'custom':
+        return Icons.settings;
+      default:
+        return Icons.games;
+    }
   }
 
   Widget _buildDifficultyOption(

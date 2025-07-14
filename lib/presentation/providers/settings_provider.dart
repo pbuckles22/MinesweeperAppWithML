@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../core/feature_flags.dart';
+import '../../core/game_mode_config.dart';
 
 class SettingsProvider extends ChangeNotifier {
   // Game mode settings
@@ -46,7 +47,7 @@ class SettingsProvider extends ChangeNotifier {
 
   // Set difficulty
   void setDifficulty(String difficulty) {
-    if (['easy', 'normal', 'hard', 'expert'].contains(difficulty)) {
+    if (GameModeConfig.instance.hasGameMode(difficulty)) {
       _selectedDifficulty = difficulty;
       _saveSettings();
       notifyListeners();
@@ -59,7 +60,7 @@ class SettingsProvider extends ChangeNotifier {
     // For now, use default values
     _isFirstClickGuaranteeEnabled = false;
     _isClassicMode = true;
-    _selectedDifficulty = 'easy';
+    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'easy';
     FeatureFlags.enableFirstClickGuarantee = _isFirstClickGuaranteeEnabled;
   }
 
@@ -73,7 +74,7 @@ class SettingsProvider extends ChangeNotifier {
   void resetToDefaults() {
     _isFirstClickGuaranteeEnabled = false;
     _isClassicMode = true;
-    _selectedDifficulty = 'easy';
+    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'easy';
     FeatureFlags.enableFirstClickGuarantee = _isFirstClickGuaranteeEnabled;
     
     _saveSettings();

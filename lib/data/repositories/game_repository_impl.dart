@@ -4,6 +4,7 @@ import '../../domain/entities/game_state.dart';
 import '../../domain/entities/cell.dart';
 import '../../core/constants.dart';
 import '../../core/feature_flags.dart';
+import '../../core/game_mode_config.dart';
 
 class GameRepositoryImpl implements GameRepository {
   GameState? _currentState;
@@ -12,12 +13,14 @@ class GameRepositoryImpl implements GameRepository {
 
   @override
   Future<GameState> initializeGame(String difficulty) async {
-    final config = GameConstants.difficultyLevels[difficulty] ?? 
-                   GameConstants.difficultyLevels['custom']!;
+    final gameMode = GameModeConfig.instance.getGameMode(difficulty);
+    if (gameMode == null) {
+      throw ArgumentError('Invalid difficulty: $difficulty');
+    }
     
-    final rows = config['rows']!;
-    final columns = config['columns']!;
-    final mines = config['mines']!;
+    final rows = gameMode.rows;
+    final columns = gameMode.columns;
+    final mines = gameMode.mines;
     
     // Create empty board
     final board = List.generate(rows, (row) {
