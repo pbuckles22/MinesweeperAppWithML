@@ -23,7 +23,7 @@
 - Performance validation for large boards
 
 ### ❌ Known Issues:
-- **Android APK build still failing** - Gradle plugin configuration needs further fixes
+- ~~**Android APK build still failing** - Gradle plugin configuration needs further fixes~~ ✅ **FIXED**
 
 ## 📋 Next Priority Features
 
@@ -75,7 +75,7 @@
 
 ## 🎯 Immediate Next Steps
 
-1. **Fix Android APK build** - Resolve remaining Gradle plugin configuration issues
+1. ✅ **Fix Android APK build** - Resolved: installed Java 17, regenerated Android folder with Kotlin DSL
 2. **Enable First Click Guarantee** - Set `enableFirstClickGuarantee = true` and implement
 3. **Add tests for first click guarantee**
 4. **Update UI to reflect new behavior**
