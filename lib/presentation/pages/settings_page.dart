@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/game_provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -169,13 +170,13 @@ class SettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             
-            // Medium
+            // Normal
             _buildDifficultyOption(
               context,
               settingsProvider,
-              'Medium',
+              'Normal',
               '16×16 grid, 40 mines',
-              'medium',
+              'normal',
               Icons.sentiment_neutral,
             ),
             const SizedBox(height: 8),
@@ -188,6 +189,17 @@ class SettingsPage extends StatelessWidget {
               '16×30 grid, 99 mines',
               'hard',
               Icons.sentiment_dissatisfied,
+            ),
+            const SizedBox(height: 8),
+            
+            // Expert
+            _buildDifficultyOption(
+              context,
+              settingsProvider,
+              'Expert',
+              '18×24 grid, 115 mines',
+              'expert',
+              Icons.warning,
             ),
           ],
         ),
@@ -207,7 +219,7 @@ class SettingsPage extends StatelessWidget {
     
     return InkWell(
       onTap: () {
-        settingsProvider.setDifficulty(difficulty);
+        _handleDifficultyChange(context, settingsProvider, difficulty);
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -266,6 +278,48 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleDifficultyChange(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    String newDifficulty,
+  ) {
+    // Check if there's an active game
+    final gameProvider = context.read<GameProvider>();
+    final hasActiveGame = gameProvider.gameState != null && 
+                         gameProvider.gameState!.gameStatus == 'playing';
+    
+    if (hasActiveGame) {
+      // Show confirmation dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Game in Progress'),
+          content: const Text(
+            'You have a game in progress. Changing the difficulty will start a new game. Do you want to continue?'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                settingsProvider.setDifficulty(newDifficulty);
+                // Start new game with new difficulty
+                gameProvider.initializeGame(newDifficulty);
+              },
+              child: const Text('Start New Game'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // No active game, just change difficulty
+      settingsProvider.setDifficulty(newDifficulty);
+    }
   }
 
   Widget _buildResetButton(BuildContext context, SettingsProvider settingsProvider) {

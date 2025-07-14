@@ -46,7 +46,7 @@ class SettingsProvider extends ChangeNotifier {
 
   // Set difficulty
   void setDifficulty(String difficulty) {
-    if (['easy', 'medium', 'hard'].contains(difficulty)) {
+    if (['easy', 'normal', 'hard', 'expert'].contains(difficulty)) {
       _selectedDifficulty = difficulty;
       _saveSettings();
       notifyListeners();

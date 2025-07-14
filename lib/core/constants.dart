@@ -9,20 +9,25 @@ class GameConstants {
   
   // Difficulty levels
   static const Map<String, Map<String, int>> difficultyLevels = {
-    'beginner': {
+    'easy': {
       'rows': 9,
       'columns': 9,
       'mines': 10,
     },
-    'intermediate': {
+    'normal': {
       'rows': 16,
       'columns': 16,
       'mines': 40,
     },
-    'expert': {
+    'hard': {
       'rows': 16,
       'columns': 30,
       'mines': 99,
+    },
+    'expert': {
+      'rows': 18,
+      'columns': 24,
+      'mines': 115,
     },
     'custom': {
       'rows': defaultRowCount,

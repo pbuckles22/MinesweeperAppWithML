@@ -14,7 +14,7 @@ void main() {
 
     group('Board Initialization', () {
       test('should create board with correct dimensions', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         expect(gameState.rows, 9);
         expect(gameState.columns, 9);
@@ -23,7 +23,7 @@ void main() {
       });
 
       test('should place mines correctly', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         int mineCount = 0;
         for (int row = 0; row < gameState.rows; row++) {
@@ -38,7 +38,7 @@ void main() {
       });
 
       test('should calculate bomb counts correctly', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         for (int row = 0; row < gameState.rows; row++) {
           for (int col = 0; col < gameState.columns; col++) {
@@ -64,21 +64,26 @@ void main() {
       });
 
       test('should handle different difficulty levels', () async {
-        final beginner = await repository.initializeGame('beginner');
-        final intermediate = await repository.initializeGame('intermediate');
+        final easy = await repository.initializeGame('easy');
+        final normal = await repository.initializeGame('normal');
+        final hard = await repository.initializeGame('hard');
         final expert = await repository.initializeGame('expert');
         
-        expect(beginner.rows, 9);
-        expect(beginner.columns, 9);
-        expect(beginner.minesCount, 10);
+        expect(easy.rows, 9);
+        expect(easy.columns, 9);
+        expect(easy.minesCount, 10);
         
-        expect(intermediate.rows, 16);
-        expect(intermediate.columns, 16);
-        expect(intermediate.minesCount, 40);
+        expect(normal.rows, 16);
+        expect(normal.columns, 16);
+        expect(normal.minesCount, 40);
         
-        expect(expert.rows, 16);
-        expect(expert.columns, 30);
-        expect(expert.minesCount, 99);
+        expect(hard.rows, 16);
+        expect(hard.columns, 30);
+        expect(hard.minesCount, 99);
+        
+        expect(expert.rows, 18);
+        expect(expert.columns, 24);
+        expect(expert.minesCount, 115);
       });
     });
 
@@ -310,7 +315,7 @@ void main() {
       });
 
       test('should detect game over when bomb is revealed', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         // Find a bomb cell
         int bombRow = -1, bombCol = -1;
@@ -336,7 +341,7 @@ void main() {
 
     group('Flag Management', () {
       test('should toggle flag correctly', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         // Flag a cell
         final flaggedState = await repository.toggleFlag(0, 0);
@@ -350,7 +355,7 @@ void main() {
       });
 
       test('should not reveal flagged cells', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         // Flag a cell
         final flaggedState = await repository.toggleFlag(0, 0);
@@ -362,7 +367,7 @@ void main() {
       });
 
       test('should not allow flagging revealed cells', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         
         // Reveal a cell
         final revealedState = await repository.revealCell(0, 0);
@@ -667,7 +672,7 @@ void main() {
       });
 
       test('should generate random board with correct properties', () async {
-        final gameState = await repository.initializeGame('beginner');
+        final gameState = await repository.initializeGame('easy');
         expect(gameState.rows, 9);
         expect(gameState.columns, 9);
         expect(gameState.minesCount, 10);
@@ -860,14 +865,14 @@ void main() {
     });
 
     group('Performance & Scale Edge Cases', () {
-      test('should handle expert level board (16x30 with 99 mines)', () async {
+      test('should handle expert level board (18x24 with 115 mines)', () async {
         final repository = GameRepositoryImpl();
         final gameState = await repository.initializeGame('expert');
         
-        expect(gameState.rows, 16);
-        expect(gameState.columns, 30);
-        expect(gameState.minesCount, 99);
-        expect(gameState.totalCells, 480);
+        expect(gameState.rows, 18);
+        expect(gameState.columns, 24);
+        expect(gameState.minesCount, 115);
+        expect(gameState.totalCells, 432);
         
         // Count actual mines
         int mineCount = 0;
@@ -878,7 +883,7 @@ void main() {
             }
           }
         }
-        expect(mineCount, 99);
+        expect(mineCount, 115);
         
         // Test that we can reveal a cell without performance issues
         final startTime = DateTime.now();
@@ -1138,7 +1143,7 @@ void main() {
     group('Input Validation Edge Cases', () {
       test('should handle invalid coordinates gracefully', () async {
         final repository = GameRepositoryImpl();
-        await repository.initializeGame('beginner');
+        await repository.initializeGame('easy');
         
         // Test negative coordinates
         expect(() => repository.revealCell(-1, 0), throwsA(isA<RangeError>()));
@@ -1169,7 +1174,7 @@ void main() {
 
       test('should handle operations after game over', () async {
         final repository = GameRepositoryImpl();
-        await repository.initializeGame('beginner');
+        await repository.initializeGame('easy');
         
         // Find and reveal a bomb to end the game
         int bombRow = -1, bombCol = -1;
@@ -1205,7 +1210,7 @@ void main() {
     group('Stress Testing Edge Cases', () {
       test('should handle rapid operations without state corruption', () async {
         final repository = GameRepositoryImpl();
-        await repository.initializeGame('beginner');
+        await repository.initializeGame('easy');
         
         // Perform rapid operations
         final futures = <Future<GameState>>[];

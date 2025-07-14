@@ -27,6 +27,25 @@
 
 ## 📋 Next Priority Features
 
+### **🚨 IMMEDIATE TODOs:**
+1. **Create Constants File** - Centralize game configuration
+   - [ ] Create `lib/constants/game_constants.dart` with all game modes, sizes, mine counts
+   - [ ] Replace hardcoded values throughout codebase with constants
+   - [ ] Add easy configuration for new game modes
+   - [ ] Ensure all files use centralized constants
+
+2. **Settings UI Improvements**
+   - [ ] When board size changes and user confirms, hide settings panel
+   - [ ] Automatically restart game with new settings
+   - [ ] Improve UX flow for settings changes
+
+3. **50/50 Situation Detection & Resolution**
+   - [ ] Identify classic Minesweeper 50/50 scenarios (two cells with equal probability)
+   - [ ] Implement detection algorithm for unsolvable situations
+   - [ ] Add visual indicators for 50/50 scenarios
+   - [ ] Consider auto-resolve or hint system for 50/50s
+   - [ ] Add tests for 50/50 detection and handling
+
 ### **1. First Click Guarantee** (Feature Flag: `enableFirstClickGuarantee`)
 - [ ] Implement first click never hits a mine
 - [ ] Move mines if first click would hit one
@@ -84,4 +103,4 @@
 ---
 
 **Current Test Coverage: 43 tests covering all standard Minesweeper functionality**
-**Next Feature: First Click Guarantee (core UX improvement)** 
+**Next Feature: First Click Guarantee (core UX improvement)**
