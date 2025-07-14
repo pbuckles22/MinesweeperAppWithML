@@ -1279,5 +1279,161 @@ void main() {
         }
       });
     });
+
+    group('Win Condition', () {
+      test('should flag all mines when game is won', () async {
+        final repository = GameRepositoryImpl();
+        
+        // Create a 2x2 board with one mine at (0,0)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false)],
+        ];
+        
+        // Set bomb counts for non-mine cells
+        board[0][1] = board[0][1].copyWith(bombsAround: 1);
+        board[1][0] = board[1][0].copyWith(bombsAround: 1);
+        board[1][1] = board[1][1].copyWith(bombsAround: 1);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 4,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Reveal all non-mine cells to trigger win
+        await repository.revealCell(0, 1);
+        await repository.revealCell(1, 0);
+        await repository.revealCell(1, 1);
+        
+        final finalState = repository.getCurrentState();
+        
+        // Game should be won
+        expect(finalState.isWon, true);
+        
+        // The mine should be flagged (not revealed)
+        expect(finalState.getCell(0, 0).isFlagged, true);
+        expect(finalState.getCell(0, 0).isRevealed, false);
+        expect(finalState.getCell(0, 0).hasBomb, true);
+        
+        // All non-mine cells should be revealed
+        expect(finalState.getCell(0, 1).isRevealed, true);
+        expect(finalState.getCell(1, 0).isRevealed, true);
+        expect(finalState.getCell(1, 1).isRevealed, true);
+      });
+
+      test('should not flag already flagged mines when game is won', () async {
+        final repository = GameRepositoryImpl();
+        
+        // Create a 2x2 board with one mine at (0,0)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: false)],
+        ];
+        
+        // Set bomb counts for non-mine cells
+        board[0][1] = board[0][1].copyWith(bombsAround: 1);
+        board[1][0] = board[1][0].copyWith(bombsAround: 1);
+        board[1][1] = board[1][1].copyWith(bombsAround: 1);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 4,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Flag the mine before winning
+        await repository.toggleFlag(0, 0);
+        expect(repository.getCurrentState().getCell(0, 0).isFlagged, true);
+        
+        // Reveal all non-mine cells to trigger win
+        await repository.revealCell(0, 1);
+        await repository.revealCell(1, 0);
+        await repository.revealCell(1, 1);
+        
+        final finalState = repository.getCurrentState();
+        
+        // Game should be won
+        expect(finalState.isWon, true);
+        
+        // The mine should remain flagged (not toggled)
+        expect(finalState.getCell(0, 0).isFlagged, true);
+        expect(finalState.getCell(0, 0).isRevealed, false);
+        expect(finalState.getCell(0, 0).hasBomb, true);
+      });
+    });
+
+    group('Loss Condition', () {
+      test('should reveal unflagged mines and show black X for incorrect flags on loss', () async {
+        final repository = GameRepositoryImpl();
+        
+        // Create a 3x3 board with mines at (0,0) and (1,1)
+        final board = [
+          [Cell(row: 0, col: 0, hasBomb: true), Cell(row: 0, col: 1, hasBomb: false), Cell(row: 0, col: 2, hasBomb: false)],
+          [Cell(row: 1, col: 0, hasBomb: false), Cell(row: 1, col: 1, hasBomb: true), Cell(row: 1, col: 2, hasBomb: false)],
+          [Cell(row: 2, col: 0, hasBomb: false), Cell(row: 2, col: 1, hasBomb: false), Cell(row: 2, col: 2, hasBomb: false)],
+        ];
+        
+        // Set bomb counts for non-mine cells
+        board[0][1] = board[0][1].copyWith(bombsAround: 2);
+        board[0][2] = board[0][2].copyWith(bombsAround: 1);
+        board[1][0] = board[1][0].copyWith(bombsAround: 2);
+        board[1][2] = board[1][2].copyWith(bombsAround: 2);
+        board[2][0] = board[2][0].copyWith(bombsAround: 1);
+        board[2][1] = board[2][1].copyWith(bombsAround: 2);
+        board[2][2] = board[2][2].copyWith(bombsAround: 1);
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 2,
+          flaggedCount: 0,
+          revealedCount: 0,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        repository.setTestState(state);
+        
+        // Flag one mine correctly and one non-mine incorrectly
+        await repository.toggleFlag(0, 0); // Correct flag
+        await repository.toggleFlag(0, 1); // Incorrect flag (non-mine)
+        
+        // Click on a mine to trigger loss
+        await repository.revealCell(1, 1);
+        
+        final finalState = repository.getCurrentState();
+        
+        // Game should be lost
+        expect(finalState.isLost, true);
+        
+        // Correctly flagged mine should stay flagged
+        expect(finalState.getCell(0, 0).isFlagged, true);
+        expect(finalState.getCell(0, 0).isRevealed, false);
+        expect(finalState.getCell(0, 0).isExploded, false);
+        
+        // Incorrectly flagged non-mine should show black X
+        expect(finalState.getCell(0, 1).isIncorrectlyFlagged, true);
+        expect(finalState.getCell(0, 1).isFlagged, false);
+        expect(finalState.getCell(0, 1).isRevealed, false);
+        
+        // Unflagged mine should be exploded
+        expect(finalState.getCell(1, 1).isExploded, true);
+        expect(finalState.getCell(1, 1).isRevealed, false);
+        expect(finalState.getCell(1, 1).isFlagged, false);
+      });
+    });
   });
 } 

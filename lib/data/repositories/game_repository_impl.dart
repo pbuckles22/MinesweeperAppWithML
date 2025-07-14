@@ -72,7 +72,7 @@ class GameRepositoryImpl implements GameRepository {
     
     if (targetCell.isExploded) {
       // Game over - reveal all mines
-      _revealAllMines(newBoard);
+      _revealAllMines(newBoard, exploded: true);
       _currentState = _currentState!.copyWith(
         board: newBoard,
         gameStatus: GameConstants.gameStateLost,
@@ -92,6 +92,12 @@ class GameRepositoryImpl implements GameRepository {
       final counts = _countCells(newBoard);
       // Check for win
       final isWon = counts['revealed'] == (_currentState!.totalCells - _currentState!.minesCount);
+      
+      // If game is won, flag all unflagged mines
+      if (isWon) {
+        _flagAllUnflaggedMines(newBoard);
+      }
+      
       _currentState = _currentState!.copyWith(
         board: newBoard,
         gameStatus: isWon ? GameConstants.gameStateWon : GameConstants.gameStatePlaying,
@@ -214,7 +220,7 @@ class GameRepositoryImpl implements GameRepository {
     
     // If we hit a bomb, reveal all mines
     if (gameOver) {
-      _revealAllMines(newBoard);
+      _revealAllMines(newBoard, exploded: true);
     }
     
     // Count cells
@@ -426,12 +432,20 @@ class GameRepositoryImpl implements GameRepository {
     revealCascade(board, row, col);
   }
 
-  void _revealAllMines(List<List<Cell>> board) {
+  void _revealAllMines(List<List<Cell>> board, {bool exploded = true}) {
     for (int row = 0; row < board.length; row++) {
       for (int col = 0; col < board[0].length; col++) {
         final cell = board[row][col];
-        if (cell.hasBomb && !cell.isFlagged) {
-          cell.forceReveal();
+        if (cell.hasBomb) {
+          // For mines: reveal if not flagged, leave flagged mines as flagged
+          if (!cell.isFlagged) {
+            cell.forceReveal(exploded: exploded);
+          }
+        } else {
+          // For non-mines: show black X if incorrectly flagged
+          if (cell.isFlagged) {
+            cell.forceReveal(showIncorrectFlag: true);
+          }
         }
       }
     }
@@ -453,5 +467,16 @@ class GameRepositoryImpl implements GameRepository {
     }
     
     return {'revealed': revealed, 'flagged': flagged};
+  }
+
+  void _flagAllUnflaggedMines(List<List<Cell>> board) {
+    for (int row = 0; row < board.length; row++) {
+      for (int col = 0; col < board[0].length; col++) {
+        final cell = board[row][col];
+        if (cell.hasBomb && !cell.isFlagged && !cell.isRevealed) {
+          cell.toggleFlag();
+        }
+      }
+    }
   }
 } 

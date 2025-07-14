@@ -3,6 +3,7 @@ enum CellState {
   revealed,
   flagged,
   exploded,
+  incorrectlyFlagged,
 }
 
 class Cell {
@@ -24,6 +25,7 @@ class Cell {
   bool get isFlagged => state == CellState.flagged;
   bool get isExploded => state == CellState.exploded;
   bool get isUnrevealed => state == CellState.unrevealed;
+  bool get isIncorrectlyFlagged => state == CellState.incorrectlyFlagged;
   bool get isEmpty => !hasBomb && bombsAround == 0;
 
   void reveal() {
@@ -40,12 +42,28 @@ class Cell {
     }
   }
 
-  void forceReveal() {
+  void forceReveal({bool exploded = true, bool showIncorrectFlag = false}) {
     if (state == CellState.flagged) {
-      state = CellState.unrevealed;
-    }
-    if (state == CellState.unrevealed) {
-      state = hasBomb ? CellState.exploded : CellState.revealed;
+      if (showIncorrectFlag && !hasBomb) {
+        // Show black X for incorrectly flagged non-mines
+        state = CellState.incorrectlyFlagged;
+      } else {
+        // Remove flag and reveal normally
+        state = CellState.unrevealed;
+        if (state == CellState.unrevealed) {
+          if (hasBomb) {
+            state = exploded ? CellState.exploded : CellState.revealed;
+          } else {
+            state = CellState.revealed;
+          }
+        }
+      }
+    } else if (state == CellState.unrevealed) {
+      if (hasBomb) {
+        state = exploded ? CellState.exploded : CellState.revealed;
+      } else {
+        state = CellState.revealed;
+      }
     }
   }
 

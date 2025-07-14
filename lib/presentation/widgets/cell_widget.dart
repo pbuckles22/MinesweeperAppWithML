@@ -62,6 +62,8 @@ class CellWidget extends StatelessWidget {
   Color _getCellColor(BuildContext context, Cell cell) {
     if (cell.isExploded) {
       return Colors.red;
+    } else if (cell.isIncorrectlyFlagged) {
+      return Colors.red;
     } else if (cell.isRevealed) {
       return Theme.of(context).colorScheme.surface;
     } else if (cell.isFlagged) {
@@ -76,6 +78,12 @@ class CellWidget extends StatelessWidget {
       return Icon(
         Icons.flag,
         color: Theme.of(context).colorScheme.primary,
+        size: 20,
+      );
+    } else if (cell.isIncorrectlyFlagged) {
+      return Icon(
+        Icons.close,
+        color: Colors.black,
         size: 20,
       );
     } else if (cell.isExploded) {

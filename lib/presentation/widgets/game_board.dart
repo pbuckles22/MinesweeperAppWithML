@@ -35,19 +35,25 @@ class _GameBoardState extends State<GameBoard> {
         return Column(
           children: [
             // Game header with stats
-            _buildGameHeader(context, gameProvider),
+            Container(
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+                  child: _buildGameHeader(context, gameProvider),
+                ),
+              ),
+            ),
             
             // Game board with zoom - constrained to available space
             Expanded(
-              child: _buildBoardWithZoom(context, gameProvider, gameState),
+              child: Container(
+                child: _buildBoardWithZoom(context, gameProvider, gameState),
+              ),
             ),
             
             // Zoom controls - directly above bottom bar
             Container(
-              height: 60.0,
-              child: Center(
-                child: _buildZoomControls(context),
-              ),
+              child: _buildZoomControls(context),
             ),
           ],
         );
@@ -60,7 +66,7 @@ class _GameBoardState extends State<GameBoard> {
     final stats = gameProvider.getGameStatistics();
     
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
       color: Theme.of(context).colorScheme.surface,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,6 +212,8 @@ class _GameBoardState extends State<GameBoard> {
 
   Widget _buildStatCard(BuildContext context, String label, String value, IconData icon) {
     return Card(
+      color: Colors.transparent, // Make card background transparent
+      elevation: 0, // Remove shadow
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: Column(
