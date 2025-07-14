@@ -147,6 +147,7 @@ class _GameBoardState extends State<GameBoard> {
 
   Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
     final cellSize = _baseCellSize * _zoomLevel;
+    final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
     
     return GestureDetector(
       onScaleStart: (details) {
@@ -166,8 +167,8 @@ class _GameBoardState extends State<GameBoard> {
         scrollDirection: Axis.horizontal,
         child: SingleChildScrollView(
           child: Container(
-            width: gameState.columns * cellSize,
-            height: gameState.rows * cellSize,
+            width: gameState.columns * cellSize + (gameState.columns - 1) * spacing,
+            height: gameState.rows * cellSize + (gameState.rows - 1) * spacing,
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -175,8 +176,8 @@ class _GameBoardState extends State<GameBoard> {
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: gameState.columns,
                 childAspectRatio: 1.0,
-                mainAxisSpacing: 2.0,
-                crossAxisSpacing: 2.0,
+                mainAxisSpacing: spacing,
+                crossAxisSpacing: spacing,
               ),
               itemCount: gameState.rows * gameState.columns,
               itemBuilder: (context, index) {
