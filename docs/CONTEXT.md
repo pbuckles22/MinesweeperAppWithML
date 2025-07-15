@@ -4,7 +4,7 @@
 This project is a modernized Flutter Minesweeper game, with a focus on robust game logic, test coverage, and future integration with ML features. The codebase is being updated for null safety, modern Flutter best practices, and maintainability.
 
 ## Current Status
-- ✅ **Core game logic is fully functional** with comprehensive test coverage (123+ tests)
+- ✅ **Core game logic is fully functional** with comprehensive test coverage (126+ tests)
 - ✅ **All known bugs fixed** including cascade logic, flag toggling, win/loss detection, and 50/50 scenario detection
 - ✅ **Chording functionality implemented** (right-click to reveal unflagged neighbors)
 - ✅ **UI improvements completed** including zoom controls, haptic feedback, and game over dialog
@@ -13,18 +13,19 @@ This project is a modernized Flutter Minesweeper game, with a focus on robust ga
 - ✅ **Bomb explosion display fixed** with clear visual distinction for different cell states
 - ✅ **Settings UX improved** with consistent auto-close behavior and educational tooltips
 - ✅ **Auto-generated descriptions** for game modes to reduce maintenance
+- ✅ **Smart Timer System** - Battery-efficient timer with app lifecycle awareness, pauses in background
 - 🏳️ **50/50 Situation Detection** - Identifies classic and shared constraint 50/50 scenarios, with scenario-based tests for each
 
 ## Recent Major Improvements (Latest Session)
-1. **✅ Game Configuration Validation** - App now fails to start if there are duplicate game mode IDs or names
-2. **✅ Bomb Display Enhancement** - Clear visual distinction between:
-   - 💣 (Red bomb on yellow background): The bomb that killed you
-   - 💣 (Bomb on red background): Other hidden bombs
-   - 🚩 (Flag): Correctly flagged mines
-   - ❌ (Black X): Incorrectly flagged non-mines
-3. **✅ Settings UX Consistency** - All game-affecting changes now auto-close settings
-4. **✅ Educational Tooltips** - Help icon explains kickstarter mode vs classic mode
-5. **✅ Auto-generated Descriptions** - Game mode descriptions generated from grid dimensions
+1. **✅ Smart Timer Implementation** - Continuous timer that:
+   - Updates every second during active gameplay
+   - Pauses automatically when app goes to background
+   - Resumes when app returns to foreground
+   - Maintains accurate timing by accounting for pause duration
+   - Saves battery by stopping background processing
+2. **✅ App Lifecycle Management** - Timer integrates with Flutter's `WidgetsBindingObserver`
+3. **✅ Provider Architecture** - Proper state management with `GameProvider` and `TimerService`
+4. **✅ Test Coverage** - All 126+ tests pass, including widget tests with proper provider setup
 
 ## Immediate TODOs (Next Session)
 1. **Advanced Game Features** - Implement undo, hints, and auto-flagging
