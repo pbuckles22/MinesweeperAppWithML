@@ -175,18 +175,17 @@ class FiftyFiftyDetector {
         return null;
       }
       
-      // Check if both cells are "blocked" - they should only be constrained by this trigger cell
-      if (_areCellsBlocked(gameState, cell1[0], cell1[1], cell2[0], cell2[1], row, col)) {
-        return FiftyFiftySituation(
-          row1: cell1[0],
-          col1: cell1[1],
-          row2: cell2[0],
-          col2: cell2[1],
-          triggerRow: row,
-          triggerCol: col,
-          number: number,
-        );
-      }
+      // For classic 50/50, we don't need to check if cells are "blocked"
+      // Classic 50/50 is simply: exactly 2 unrevealed neighbors with exactly 1 remaining mine
+      return FiftyFiftySituation(
+        row1: cell1[0],
+        col1: cell1[1],
+        row2: cell2[0],
+        col2: cell2[1],
+        triggerRow: row,
+        triggerCol: col,
+        number: number,
+      );
     }
     return null;
   }

@@ -821,5 +821,82 @@ void main() {
         expect(situations.length, 1, reason: 'Should detect a classic 50/50 situation even when rotated 180 degrees');
       });
     });
+
+    group('Scenario 5: Multiple Independent Classic 50/50s', () {
+      test('should detect multiple independent classic 50/50s on the same board', () {
+        // [1][2][2][2][2]
+        // [F][3][F][F][1]
+        // [?][?][4][3][1]
+        // [?][?][F][1][0]
+        // [?][?][3][2][2]
+        // Two independent 50/50s:
+        // 1. Row 2: (2,0) and (2,1) - constrained by "3" at (1,1) with 2 flags and 2 unrevealed
+        // 2. Row 4: (4,0) and (4,1) - constrained by "3" at (4,2) with 3 mines and 2 unrevealed
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 3, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 4, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+            Cell(row: 1, col: 1, hasBomb: false, bombsAround: 3, state: CellState.revealed),
+            Cell(row: 1, col: 2, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+            Cell(row: 1, col: 3, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+            Cell(row: 1, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 1
+            Cell(row: 2, col: 1, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 1
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 4, state: CellState.revealed),
+            Cell(row: 2, col: 3, hasBomb: false, bombsAround: 3, state: CellState.revealed),
+            Cell(row: 2, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 3, col: 0, hasBomb: false, bombsAround: 0, state: CellState.unrevealed),
+            Cell(row: 3, col: 1, hasBomb: false, bombsAround: 0, state: CellState.unrevealed),
+            Cell(row: 3, col: 2, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+            Cell(row: 3, col: 3, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 3, col: 4, hasBomb: false, bombsAround: 0, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 4, col: 0, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 2
+            Cell(row: 4, col: 1, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 2
+            Cell(row: 4, col: 2, hasBomb: false, bombsAround: 3, state: CellState.revealed),
+            Cell(row: 4, col: 3, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 4, col: 4, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+        ];
+
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 8,
+          flaggedCount: 4,
+          revealedCount: 17,
+          totalCells: 25,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+
+        expect(situations, isNotEmpty);
+        expect(situations.length, equals(1)); // Should return only one 50/50 (the first one found)
+        
+        // Verify it's one of the two valid 50/50s
+        final situation = situations.first;
+        
+        // Should be either the first 50/50 ((2,0) and (2,1)) or the second 50/50 ((4,0) and (4,1))
+        final first5050 = (situation.row1 == 2 && situation.col1 == 0 && situation.row2 == 2 && situation.col2 == 1) ||
+                         (situation.row1 == 2 && situation.col1 == 1 && situation.row2 == 2 && situation.col2 == 0);
+        final second5050 = (situation.row1 == 4 && situation.col1 == 0 && situation.row2 == 4 && situation.col2 == 1) ||
+                          (situation.row1 == 4 && situation.col1 == 1 && situation.row2 == 4 && situation.col2 == 0);
+        
+        expect(first5050 || second5050, isTrue, reason: '50/50 should be one of the two valid scenarios');
+      });
+    });
   });
 } 

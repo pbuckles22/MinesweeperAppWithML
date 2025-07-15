@@ -186,6 +186,87 @@ This scenario combines Scenario 1 (classic 50/50) and Scenario 2 (shared constra
 
 ---
 
+## Scenario 5: Multiple Independent Classic 50/50s
+
+### Board Configuration
+```
+[1][2][2][2][2]
+[F][3][F][F][1]
+[?][?][4][3][1]
+[?][?][F][1][0]
+[?][?][3][2][2]
+```
+
+### Detailed Explanation
+This scenario tests that the system can detect multiple independent classic 50/50 situations on the same board:
+
+**First 50/50 (Row 2):**
+- The "3" at (1,1) has 2 flagged neighbors and 2 unrevealed neighbors
+- The 2 unrevealed neighbors at (2,0) and (2,1) form a classic 50/50
+- Remaining mines: 3 - 2 flags = 1 mine needed
+
+**Second 50/50 (Row 4):**
+- The "3" at (4,2) has 3 mines and 2 unrevealed neighbors
+- The 2 unrevealed neighbors at (4,0) and (4,1) form a classic 50/50
+- Remaining mines: 3 - 0 flags = 3 mines needed, but only 2 unrevealed neighbors
+
+Both 50/50s are independent of each other and should be detected by the same classic 50/50 logic. The system should return one of the valid 50/50 cells.
+
+### Test Code
+```dart
+final board = [
+  [
+    Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+    Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+    Cell(row: 0, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+    Cell(row: 0, col: 3, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+    Cell(row: 0, col: 4, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+  ],
+  [
+    Cell(row: 1, col: 0, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+    Cell(row: 1, col: 1, hasBomb: false, bombsAround: 3, state: CellState.revealed),
+    Cell(row: 1, col: 2, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+    Cell(row: 1, col: 3, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+    Cell(row: 1, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+  ],
+  [
+    Cell(row: 2, col: 0, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 1
+    Cell(row: 2, col: 1, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 1
+    Cell(row: 2, col: 2, hasBomb: false, bombsAround: 4, state: CellState.revealed),
+    Cell(row: 2, col: 3, hasBomb: false, bombsAround: 3, state: CellState.revealed),
+    Cell(row: 2, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+  ],
+  [
+    Cell(row: 3, col: 0, hasBomb: false, bombsAround: 0, state: CellState.unrevealed),
+    Cell(row: 3, col: 1, hasBomb: false, bombsAround: 0, state: CellState.unrevealed),
+    Cell(row: 3, col: 2, hasBomb: true, bombsAround: 0, state: CellState.flagged),
+    Cell(row: 3, col: 3, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+    Cell(row: 3, col: 4, hasBomb: false, bombsAround: 0, state: CellState.revealed),
+  ],
+  [
+    Cell(row: 4, col: 0, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 2
+    Cell(row: 4, col: 1, hasBomb: false, bombsAround: 0, state: CellState.unrevealed), // 50/50 candidate 2
+    Cell(row: 4, col: 2, hasBomb: false, bombsAround: 3, state: CellState.revealed),
+    Cell(row: 4, col: 3, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+    Cell(row: 4, col: 4, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+  ],
+];
+```
+
+### Expected Behavior
+- Should detect at least one of the two 50/50 situations
+- Both 50/50s are independent and should be found by the same classic 50/50 logic
+- The system should return one valid 50/50 cell from either scenario
+
+---
+
+## Classic 50/50 Detection Logic Update
+- Classic 50/50 detection **no longer requires candidate cells to be "blocked"** (i.e., only constrained by one revealed cell).
+- Any revealed numbered cell with exactly 2 unrevealed neighbors and exactly 1 remaining mine will be detected as a classic 50/50, even if those cells have other revealed neighbors.
+- The system supports multiple independent classic 50/50s on the same board (though only one is returned at a time).
+
+---
+
 ## Implementation Details
 
 ### Key Detection Methods
