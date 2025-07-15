@@ -148,6 +148,23 @@ onLongPress: () {
 - Sound effects
 - Proper win/lose screens
 
+### 9. Timer Inconsistency
+**Issue**: Game timer does not consistently run and only updates when a move is made.
+
+**Location**: `lib/services/timer_service.dart` and timer integration
+
+**Root Cause**:
+- Timer likely only updates UI when game state changes (moves made)
+- Missing continuous timer updates during gameplay
+- Timer may not be properly integrated with the game loop
+
+**Impact**:
+- Timer appears frozen during gameplay
+- Inconsistent user experience
+- Timer may not accurately reflect actual game duration
+
+**TODO**: Fix timer to update continuously during gameplay, not just on moves
+
 ## 🎯 Priority Fixes
 
 ### High Priority (Fix Immediately)

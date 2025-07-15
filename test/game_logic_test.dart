@@ -5,6 +5,7 @@ import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/core/constants.dart';
 import 'test_helper.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
+import 'package:flutter_minesweeper/core/feature_flags.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,8 @@ void main() {
 
     setUp(() {
       repository = GameRepositoryImpl();
+      // Disable First Click Guarantee for tests to allow testing mine hits
+      FeatureFlags.enableFirstClickGuarantee = false;
     });
 
     group('Board Initialization', () {
@@ -221,9 +224,9 @@ void main() {
         final result = await repository.revealCell(2, 2);
         
         // Debug: Print revealed cells
-        print('Row 0: ${result.getCell(0, 0).isRevealed ? 'R' : '.'} ${result.getCell(0, 1).isRevealed ? 'R' : '.'} ${result.getCell(0, 2).isRevealed ? 'R' : '.'} ');
-        print('Row 1: ${result.getCell(1, 0).isRevealed ? 'R' : '.'} ${result.getCell(1, 1).isRevealed ? 'R' : '.'} ${result.getCell(1, 2).isRevealed ? 'R' : '.'} ');
-        print('Row 2: ${result.getCell(2, 0).isRevealed ? 'R' : '.'} ${result.getCell(2, 1).isRevealed ? 'R' : '.'} ${result.getCell(2, 2).isRevealed ? 'R' : '.'} ');
+        // print('Row 0: ${result.getCell(0, 0).isRevealed ? 'R' : '.'} ${result.getCell(0, 1).isRevealed ? 'R' : '.'} ${result.getCell(0, 2).isRevealed ? 'R' : '.'} ');
+        // print('Row 1: ${result.getCell(1, 0).isRevealed ? 'R' : '.'} ${result.getCell(1, 1).isRevealed ? 'R' : '.'} ${result.getCell(1, 2).isRevealed ? 'R' : '.'} ');
+        // print('Row 2: ${result.getCell(2, 0).isRevealed ? 'R' : '.'} ${result.getCell(2, 1).isRevealed ? 'R' : '.'} ${result.getCell(2, 2).isRevealed ? 'R' : '.'} ');
         
         // All empty cells and their immediate numbered neighbors should be revealed
         expect(result.getCell(2, 2).isRevealed, true); // empty
@@ -343,7 +346,7 @@ void main() {
         // Reveal the bomb
         final newState = await repository.revealCell(bombRow, bombCol);
         expect(newState.isGameOver, true, reason: 'Game should be over when bomb is revealed');
-        expect(newState.getCell(bombRow, bombCol).isExploded, true, reason: 'Bomb cell should be exploded');
+        expect(newState.getCell(bombRow, bombCol).isHitBomb, true, reason: 'Bomb cell should be marked as hit bomb');
       });
     });
 
@@ -1445,8 +1448,8 @@ void main() {
         expect(finalState.getCell(0, 1).isFlagged, false);
         expect(finalState.getCell(0, 1).isRevealed, false);
         
-        // Unflagged mine should be exploded
-        expect(finalState.getCell(1, 1).isExploded, true);
+        // Unflagged mine should be marked as hit bomb
+        expect(finalState.getCell(1, 1).isHitBomb, true);
         expect(finalState.getCell(1, 1).isRevealed, false);
         expect(finalState.getCell(1, 1).isFlagged, false);
       });

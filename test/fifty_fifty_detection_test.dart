@@ -270,16 +270,7 @@ void main() {
           startTime: DateTime.now(),
           difficulty: 'test',
         );
-        // Debug: Print the board state
-        print('DEBUG: Board state:');
-        for (var row in board) {
-          print(row.map((c) => c.isRevealed ? '[${c.bombsAround}]' : '[?]').join(' '));
-        }
         final situations = FiftyFiftyDetector.detect5050Situations(state);
-        print('DEBUG: Detected 50/50 situations: ${situations.length}');
-        for (final s in situations) {
-          print('DEBUG: 50/50 between (${s.row1},${s.col1}) and (${s.row2},${s.col2}), triggered by (${s.triggerRow},${s.triggerCol})');
-        }
         expect(situations.length, 1);
       });
     });
@@ -683,7 +674,6 @@ void main() {
         
         // Debug: Check the trigger cell (1,1)
         final triggerCell = state.getCell(1, 1);
-        print('Trigger cell: row=1, col=1, bombsAround=${triggerCell.bombsAround}, isRevealed=${triggerCell.isRevealed}');
         
         // Count unrevealed neighbors around the trigger cell
         int unrevealedCount = 0;
@@ -696,12 +686,10 @@ void main() {
               final neighbor = state.getCell(nr, nc);
               if (!neighbor.isRevealed && !neighbor.isFlagged) {
                 unrevealedCount++;
-                print('Unrevealed neighbor at ($nr, $nc)');
               }
             }
           }
         }
-        print('Unrevealed neighbors around trigger: $unrevealedCount');
         
         // Count flagged neighbors
         int flaggedCount = 0;
@@ -718,14 +706,8 @@ void main() {
             }
           }
         }
-        print('Flagged neighbors around trigger: $flaggedCount');
-        print('Remaining mines: ${triggerCell.bombsAround - flaggedCount}');
         
         final situations = FiftyFiftyDetector.detect5050Situations(state);
-        print('Detected 50/50 situations: ${situations.length}');
-        if (situations.isNotEmpty) {
-          print('50/50 between (${situations.first.row1},${situations.first.col1}) and (${situations.first.row2},${situations.first.col2})');
-        }
         
         // Should detect a 50/50
         expect(situations, isNotEmpty);

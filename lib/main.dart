@@ -12,10 +12,10 @@ void main() async {
   // Validate game configuration before app starts
   try {
     await GameModeConfig.instance.loadGameModes();
-    print('Game configuration validation passed');
+    // print('Game configuration validation passed');
   } catch (e) {
-    print('CRITICAL ERROR: Game configuration validation failed: $e');
-    print('App will exit due to configuration error.');
+    // print('CRITICAL ERROR: Game configuration validation failed: $e');
+    // print('App will exit due to configuration error.');
     // Force exit the app immediately
     exit(1);
   }

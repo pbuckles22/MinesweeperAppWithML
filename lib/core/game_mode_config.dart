@@ -107,11 +107,11 @@ class GameModeConfig {
 
     try {
       final String jsonString = await rootBundle.loadString('assets/config/game_modes.json');
-      print('GameModeConfig: Raw JSON string:');
-      print(jsonString);
+      // print('GameModeConfig: Raw JSON string:');
+      // print(jsonString);
       final Map<String, dynamic> json = jsonDecode(jsonString);
-      print('GameModeConfig: Parsed JSON object:');
-      print(json);
+      // print('GameModeConfig: Parsed JSON object:');
+      // print(json);
       
       final List<dynamic> gameModesJson = json['game_modes'] as List;
       
@@ -125,12 +125,12 @@ class GameModeConfig {
         
         if (ids.contains(id)) {
           final error = ArgumentError('Duplicate game mode ID found: "$id". All game mode IDs must be unique.');
-          print('GameModeConfig: VALIDATION ERROR - $error');
+          // print('GameModeConfig: VALIDATION ERROR - $error');
           throw error;
         }
         if (names.contains(name)) {
           final error = ArgumentError('Duplicate game mode name found: "$name". All game mode names must be unique.');
-          print('GameModeConfig: VALIDATION ERROR - $error');
+          // print('GameModeConfig: VALIDATION ERROR - $error');
           throw error;
         }
         
@@ -141,8 +141,8 @@ class GameModeConfig {
       _gameModes = gameModesJson
           .map((mode) => GameMode.fromJson(mode))
           .toList();
-      print('GameModeConfig: Parsed game_modes:');
-      print(_gameModes);
+      // print('GameModeConfig: Parsed game_modes:');
+      // print(_gameModes);
       
       _defaultMode = json['default_mode'] as String;
       
@@ -151,15 +151,15 @@ class GameModeConfig {
       }
       
       _isLoaded = true;
-      print('GameModeConfig: Loaded ${_gameModes.length} game modes from JSON');
+      // print('GameModeConfig: Loaded ${_gameModes.length} game modes from JSON');
     } catch (e) {
-      print('GameModeConfig: Failed to load JSON. Error: $e');
+      // print('GameModeConfig: Failed to load JSON. Error: $e');
       if (e is ArgumentError) {
         // Re-throw validation errors so they're visible
         rethrow;
       }
       // Only fall back for other types of errors (file not found, JSON parse errors, etc.)
-      print('GameModeConfig: Using fallback modes due to non-validation error');
+      // print('GameModeConfig: Using fallback modes due to non-validation error');
       _loadDefaultModes();
       _isLoaded = true;
     }
@@ -240,7 +240,7 @@ class GameModeConfig {
       final mode = _gameModes.firstWhere((mode) => mode.id == id);
       return mode;
     } catch (e) {
-      print('GameModeConfig: Could not find game mode with id "$id". Available modes: ${_gameModes.map((m) => m.id).toList()}');
+      // print('GameModeConfig: Could not find game mode with id "$id". Available modes: ${_gameModes.map((m) => m.id).toList()}');
       return null;
     }
   }

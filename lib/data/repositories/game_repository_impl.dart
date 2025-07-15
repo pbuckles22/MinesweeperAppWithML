@@ -81,7 +81,7 @@ class GameRepositoryImpl implements GameRepository {
     // Get the updated target cell after potential mine relocation
     final targetCell = newBoard[row][col];
     
-    // Check if cell is empty BEFORE revealing it
+    // Check if cell is empty AFTER first click guarantee logic
     final wasEmpty = !targetCell.hasBomb && targetCell.bombsAround == 0;
     
     // Reveal the cell
@@ -98,12 +98,12 @@ class GameRepositoryImpl implements GameRepository {
     } else {
       // Safe reveal - cascade if empty
       if (wasEmpty) {
-        print('Cell is empty, calling cascade');
-        print('Target cell state: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}, isEmpty=$wasEmpty');
+        // print('Cell is empty, calling cascade');
+        // print('Target cell state: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}, isEmpty=$wasEmpty');
         _cascadeReveal(newBoard, row, col);
       } else {
-        print('Cell is not empty, not calling cascade');
-        print('Target cell state: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}, isEmpty=$wasEmpty');
+        // print('Cell is not empty, not calling cascade');
+        // print('Target cell state: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}, isEmpty=$wasEmpty');
       }
       // Count revealed and flagged cells
       final counts = _countCells(newBoard);
@@ -312,6 +312,12 @@ class GameRepositoryImpl implements GameRepository {
   // TEST ONLY: Set a custom game state for deterministic tests
   void setTestState(GameState state) {
     _currentState = state;
+  }
+
+  // Force reset internal state (useful when settings change)
+  void forceReset() {
+    _currentState = null;
+    _isFirstClick = true;
   }
 
   // Private helper methods

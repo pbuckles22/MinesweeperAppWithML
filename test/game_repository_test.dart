@@ -4,6 +4,7 @@ import 'package:flutter_minesweeper/domain/entities/cell.dart';
 import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/data/repositories/game_repository_impl.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
+import 'package:flutter_minesweeper/core/feature_flags.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,8 @@ void main() {
 
     setUp(() {
       repository = GameRepositoryImpl();
+      // Disable First Click Guarantee for tests to allow testing mine hits
+      FeatureFlags.enableFirstClickGuarantee = false;
     });
 
     group('Board Initialization', () {
@@ -124,10 +127,14 @@ void main() {
       test('should detect win when all non-mines are revealed', () async {
         final gameState = await repository.initializeGame('easy');
         
-        // Reveal all non-mine cells
+        // Reveal all non-mine cells (skip if game is already over)
         for (int row = 0; row < gameState.rows; row++) {
           for (int col = 0; col < gameState.columns; col++) {
-            if (!gameState.getCell(row, col).hasBomb) {
+            final currentState = repository.getCurrentState();
+            if (currentState.isGameOver) break;
+            
+            if (!currentState.getCell(row, col).hasBomb && 
+                !currentState.getCell(row, col).isRevealed) {
               await repository.revealCell(row, col);
             }
           }

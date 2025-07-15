@@ -124,6 +124,13 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  // Force reset repository state (useful when settings change)
+  void forceResetRepository() {
+    if (_repository is GameRepositoryImpl) {
+      (_repository as GameRepositoryImpl).forceReset();
+    }
+  }
+
   // Get game statistics
   Map<String, dynamic> getGameStatistics() {
     final stats = _repository.getGameStatistics();

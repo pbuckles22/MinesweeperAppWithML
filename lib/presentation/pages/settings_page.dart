@@ -352,7 +352,12 @@ class SettingsPage extends StatelessWidget {
     GameProvider gameProvider,
     bool newValue,
   ) {
+    // Update settings first
     settingsProvider.setGameMode(newValue);
+    
+    // Force reset repository to ensure it picks up new feature flags
+    gameProvider.forceResetRepository();
+    
     // Reset game with new mode
     if (gameProvider.isGameInitialized) {
       gameProvider.initializeGame(settingsProvider.selectedDifficulty);
@@ -557,6 +562,8 @@ class SettingsPage extends StatelessWidget {
     String newDifficulty,
   ) {
     settingsProvider.setDifficulty(newDifficulty);
+    // Force reset repository to ensure clean state
+    gameProvider.forceResetRepository();
     // Start new game with new difficulty
     gameProvider.initializeGame(newDifficulty);
     // Close settings page
