@@ -5,6 +5,7 @@ enum CellState {
   exploded,
   incorrectlyFlagged,
   hitBomb,
+  fiftyFifty,
 }
 
 class Cell {
@@ -28,10 +29,11 @@ class Cell {
   bool get isUnrevealed => state == CellState.unrevealed;
   bool get isIncorrectlyFlagged => state == CellState.incorrectlyFlagged;
   bool get isHitBomb => state == CellState.hitBomb;
+  bool get isFiftyFifty => state == CellState.fiftyFifty;
   bool get isEmpty => !hasBomb && bombsAround == 0;
 
   void reveal() {
-    if (state == CellState.unrevealed) {
+    if (state == CellState.unrevealed || state == CellState.fiftyFifty) {
       state = hasBomb ? CellState.exploded : CellState.revealed;
     }
   }
@@ -40,6 +42,18 @@ class Cell {
     if (state == CellState.unrevealed) {
       state = CellState.flagged;
     } else if (state == CellState.flagged) {
+      state = CellState.unrevealed;
+    }
+  }
+
+  void markAsFiftyFifty() {
+    if (state == CellState.unrevealed) {
+      state = CellState.fiftyFifty;
+    }
+  }
+
+  void unmarkFiftyFifty() {
+    if (state == CellState.fiftyFifty) {
       state = CellState.unrevealed;
     }
   }
@@ -66,7 +80,7 @@ class Cell {
         // Remove flag from non-mines and reveal
         state = CellState.revealed;
       }
-    } else if (state == CellState.unrevealed) {
+    } else if (state == CellState.unrevealed || state == CellState.fiftyFifty) {
       if (hasBomb) {
         state = exploded ? CellState.exploded : CellState.revealed;
       } else {

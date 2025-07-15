@@ -1,30 +1,32 @@
 /// Feature flags for controlling which features are enabled in the app
 class FeatureFlags {
   // Core game features
-  static bool enableFirstClickGuarantee = false; // TODO: Implement first click guarantee
-  static bool enableGameStatistics = true; // TODO: Implement game statistics and timer
-  static bool enableBoardReset = false; // TODO: Implement board reset functionality
-  static bool enableCustomDifficulty = false; // TODO: Implement custom difficulty settings
+  static bool enableFirstClickGuarantee = true; // First click always reveals a cascade
+  static bool enableGameStatistics = true; // Game statistics and timer
+  static bool enableBoardReset = false; // Board reset functionality
+  static bool enableCustomDifficulty = false; // Custom difficulty settings
   
   // Advanced features
-  static bool enableUndoMove = false; // TODO: Implement undo functionality
-  static bool enableHintSystem = false; // TODO: Implement hint system
-  static bool enableAutoFlag = false; // TODO: Implement auto-flagging
-  static bool enableBestTimes = false; // TODO: Implement best times tracking
+  static bool enableUndoMove = false; // Undo functionality
+  static bool enableHintSystem = false; // Hint system
+  static bool enableAutoFlag = false; // Auto-flagging
+  static bool enableBestTimes = false; // Best times tracking
+  static bool enable5050Detection = false; // 50/50 situation detection
+  static bool enable5050SafeMove = false; // Safe move option for 50/50 scenarios
   
   // UI/UX features
-  static bool enableDarkMode = false; // TODO: Implement dark mode
-  static bool enableAnimations = false; // TODO: Implement smooth animations
-  static bool enableSoundEffects = false; // TODO: Implement sound effects
-  static bool enableHapticFeedback = true; // TODO: Implement haptic feedback
+  static bool enableDarkMode = false; // Dark mode
+  static bool enableAnimations = false; // Smooth animations
+  static bool enableSoundEffects = false; // Sound effects
+  static bool enableHapticFeedback = true; // Haptic feedback
   
   // ML/AI features (for future integration)
-  static bool enableMLAssistance = false; // TODO: Implement ML-powered assistance
-  static bool enableAutoPlay = false; // TODO: Implement auto-play functionality
-  static bool enableDifficultyPrediction = false; // TODO: Implement difficulty prediction
+  static bool enableMLAssistance = false; // ML-powered assistance
+  static bool enableAutoPlay = false; // Auto-play functionality
+  static bool enableDifficultyPrediction = false; // Difficulty prediction
   
   // Debug/Development features
-  static bool enableDebugMode = false; // TODO: Implement debug mode
-  static bool enablePerformanceMetrics = false; // TODO: Implement performance tracking
-  static bool enableTestMode = false; // TODO: Implement test mode for development
+  static bool enableDebugMode = false; // Debug mode
+  static bool enablePerformanceMetrics = false; // Performance tracking
+  static bool enableTestMode = false; // Test mode for development
 } 

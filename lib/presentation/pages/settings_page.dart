@@ -32,6 +32,22 @@ class SettingsPage extends StatelessWidget {
               _buildModeDescription(context, settingsProvider),
               const SizedBox(height: 24),
               
+              // 50/50 Detection Section
+              _buildSectionHeader(context, 'Advanced Features'),
+              const SizedBox(height: 8),
+              
+              // 50/50 Detection Toggle
+              _build5050DetectionToggle(context, settingsProvider),
+              const SizedBox(height: 8),
+              
+              // 50/50 Safe Move Toggle
+              _build5050SafeMoveToggle(context, settingsProvider),
+              const SizedBox(height: 16),
+              
+              // 50/50 Description
+              _build5050Description(context, settingsProvider),
+              const SizedBox(height: 24),
+              
               // Board Size Section
               _buildSectionHeader(context, 'Board Size'),
               const SizedBox(height: 8),
@@ -116,6 +132,174 @@ class SettingsPage extends StatelessWidget {
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _build5050DetectionToggle(BuildContext context, SettingsProvider settingsProvider) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '50/50 Detection',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Tooltip(
+                            message: 'Detects classic Minesweeper 50/50 situations where two cells have equal probability of being mines. These cells will be highlighted with an orange border and help icon.',
+                            child: Icon(
+                              Icons.help_outline,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Highlight unsolvable situations',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: settingsProvider.is5050DetectionEnabled,
+                  onChanged: (value) {
+                    settingsProvider.toggle5050Detection();
+                  },
+                  activeColor: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _build5050SafeMoveToggle(BuildContext context, SettingsProvider settingsProvider) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '50/50 Safe Move',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Tooltip(
+                            message: 'When enabled, clicking on a 50/50 cell will automatically choose the safer option. This helps avoid frustrating random guesses.',
+                            child: Icon(
+                              Icons.help_outline,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Auto-resolve 50/50 situations',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: settingsProvider.is5050SafeMoveEnabled,
+                  onChanged: (value) {
+                    settingsProvider.toggle5050SafeMove();
+                  },
+                  activeColor: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _build5050Description(BuildContext context, SettingsProvider settingsProvider) {
+    if (!settingsProvider.is5050DetectionEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      elevation: 1,
+      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.psychology,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '50/50 Detection Active',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Cells in 50/50 situations will be highlighted with an orange border and help icon. This helps you identify when you\'re forced to make a random guess versus when there\'s a logical solution available.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            if (settingsProvider.is5050SafeMoveEnabled) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Safe Move is enabled: Clicking on 50/50 cells will automatically choose the safer option.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
           ],
         ),
       ),

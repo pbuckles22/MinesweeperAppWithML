@@ -5,6 +5,7 @@ import '../../domain/repositories/game_repository.dart';
 import '../../data/repositories/game_repository_impl.dart';
 import '../../services/timer_service.dart';
 import '../../services/haptic_service.dart';
+import '../../services/fifty_fifty_detector.dart';
 import '../../core/feature_flags.dart';
 
 class GameProvider extends ChangeNotifier {
@@ -13,6 +14,7 @@ class GameProvider extends ChangeNotifier {
   GameState? _gameState;
   bool _isLoading = false;
   String? _error;
+  List<FiftyFiftySituation> _current5050Situations = [];
 
   GameProvider({GameRepository? repository, TimerService? timerService}) 
       : _repository = repository ?? GameRepositoryImpl(),
@@ -28,6 +30,8 @@ class GameProvider extends ChangeNotifier {
   bool get isGameLost => _gameState?.isLost ?? false;
   bool get isPlaying => _gameState?.isPlaying ?? false;
   TimerService get timerService => _timerService;
+  List<FiftyFiftySituation> get current5050Situations => _current5050Situations;
+  bool get has5050Situations => _current5050Situations.isNotEmpty;
 
   // Initialize game
   Future<void> initializeGame(String difficulty) async {
@@ -37,6 +41,7 @@ class GameProvider extends ChangeNotifier {
       
       _gameState = await _repository.initializeGame(difficulty);
       _timerService.reset();
+      _current5050Situations = [];
       notifyListeners();
     } catch (e) {
       _setError('Failed to initialize game: $e');
@@ -58,6 +63,10 @@ class GameProvider extends ChangeNotifier {
       }
       
       _gameState = await _repository.revealCell(row, col);
+      
+      // Update 50/50 detection after revealing a cell
+      _update5050Detection();
+      
       notifyListeners();
       
       // Check if game is over and show appropriate dialog
@@ -84,6 +93,9 @@ class GameProvider extends ChangeNotifier {
       
       _gameState = await _repository.toggleFlag(row, col);
       
+      // Update 50/50 detection after flagging
+      _update5050Detection();
+      
       // Provide haptic feedback for flag toggle
       HapticService.lightImpact();
       
@@ -103,6 +115,7 @@ class GameProvider extends ChangeNotifier {
       
       _gameState = await _repository.resetGame();
       _timerService.reset();
+      _current5050Situations = [];
       notifyListeners();
     } catch (e) {
       _setError('Failed to reset game: $e');
@@ -117,6 +130,9 @@ class GameProvider extends ChangeNotifier {
     if (FeatureFlags.enableGameStatistics) {
       stats['timerElapsed'] = _timerService.elapsed.inSeconds;
       stats['timerRunning'] = _timerService.isRunning;
+    }
+    if (FeatureFlags.enable5050Detection) {
+      stats['5050Situations'] = _current5050Situations.length;
     }
     return stats;
   }
@@ -160,6 +176,82 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  // 50/50 Detection Methods
+  void _update5050Detection() {
+    if (!FeatureFlags.enable5050Detection || _gameState == null) {
+      _current5050Situations = [];
+      return;
+    }
+
+    // Clear previous 50/50 markings
+    _clear5050Markings();
+    
+    // Detect new 50/50 situations
+    _current5050Situations = FiftyFiftyDetector.detect5050Situations(_gameState!);
+    
+    // Mark cells that are in 50/50 situations
+    _mark5050Cells();
+  }
+
+  void _clear5050Markings() {
+    if (_gameState == null) return;
+    
+    for (int row = 0; row < _gameState!.rows; row++) {
+      for (int col = 0; col < _gameState!.columns; col++) {
+        final cell = _gameState!.getCell(row, col);
+        if (cell.isFiftyFifty) {
+          cell.unmarkFiftyFifty();
+        }
+      }
+    }
+  }
+
+  void _mark5050Cells() {
+    if (_gameState == null) return;
+    
+    for (final situation in _current5050Situations) {
+      // Mark both cells in the 50/50 situation
+      final cell1 = _gameState!.getCell(situation.row1, situation.col1);
+      final cell2 = _gameState!.getCell(situation.row2, situation.col2);
+      
+      if (cell1.isUnrevealed) {
+        cell1.markAsFiftyFifty();
+      }
+      if (cell2.isUnrevealed) {
+        cell2.markAsFiftyFifty();
+      }
+    }
+  }
+
+  // Check if a specific cell is in a 50/50 situation
+  bool isCellIn5050Situation(int row, int col) {
+    if (!FeatureFlags.enable5050Detection || _gameState == null) {
+      return false;
+    }
+    
+    return FiftyFiftyDetector.isCellIn5050Situation(_gameState!, row, col);
+  }
+
+  // Get 50/50 situations for a specific cell
+  List<FiftyFiftySituation> get5050SituationsForCell(int row, int col) {
+    if (!FeatureFlags.enable5050Detection || _gameState == null) {
+      return [];
+    }
+    
+    return FiftyFiftyDetector.get5050SituationsForCell(_gameState!, row, col);
+  }
+
+  // Safe move for 50/50 situations (if enabled)
+  Future<void> makeSafeMove(int row, int col) async {
+    if (!FeatureFlags.enable5050SafeMove || !isCellIn5050Situation(row, col)) {
+      return;
+    }
+    
+    // For now, we'll just reveal the cell normally
+    // In a full implementation, this might involve more sophisticated logic
+    await revealCell(row, col);
+  }
+
   // Private helper methods
   void _setLoading(bool loading) {
     _isLoading = loading;
@@ -176,6 +268,9 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleGameOver() {
+    // Clear 50/50 situations when game is over
+    _current5050Situations = [];
+    _clear5050Markings();
     // This will be handled by the UI layer
     // The provider just notifies that the game is over
   }

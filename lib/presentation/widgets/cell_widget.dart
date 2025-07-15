@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../domain/entities/cell.dart';
 import '../providers/game_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../core/feature_flags.dart';
 
 class CellWidget extends StatelessWidget {
   final int row;
@@ -46,8 +47,8 @@ class CellWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: _getCellColor(context, cell),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                width: 1.0,
+                color: _getCellBorderColor(context, cell),
+                width: _getCellBorderWidth(cell),
               ),
               borderRadius: BorderRadius.circular(4.0),
             ),
@@ -71,9 +72,25 @@ class CellWidget extends StatelessWidget {
       return Theme.of(context).colorScheme.surface;
     } else if (cell.isFlagged) {
       return Theme.of(context).colorScheme.primaryContainer;
+    } else if (cell.isFiftyFifty) {
+      return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.8);
     } else {
       return Theme.of(context).colorScheme.surfaceVariant;
     }
+  }
+
+  Color _getCellBorderColor(BuildContext context, Cell cell) {
+    if (cell.isFiftyFifty && FeatureFlags.enable5050Detection) {
+      return Colors.orange.shade600; // Orange border for 50/50 cells
+    }
+    return Theme.of(context).colorScheme.outline.withOpacity(0.3);
+  }
+
+  double _getCellBorderWidth(Cell cell) {
+    if (cell.isFiftyFifty && FeatureFlags.enable5050Detection) {
+      return 2.0; // Thicker border for 50/50 cells
+    }
+    return 1.0;
   }
 
   Widget _buildCellContent(BuildContext context, Cell cell) {
@@ -118,6 +135,25 @@ class CellWidget extends StatelessWidget {
       } else {
         return const SizedBox.shrink(); // Empty cell
       }
+    } else if (cell.isFiftyFifty && FeatureFlags.enable5050Detection) {
+      // Show a subtle indicator for 50/50 cells
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          // Main cell content (empty for unrevealed)
+          const SizedBox.shrink(),
+          // 50/50 indicator in top-right corner
+          Positioned(
+            top: 2,
+            right: 2,
+            child: Icon(
+              Icons.help_outline,
+              color: Colors.orange.shade600,
+              size: 12,
+            ),
+          ),
+        ],
+      );
     } else {
       return const SizedBox.shrink(); // Unrevealed cell
     }
