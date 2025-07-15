@@ -9,11 +9,26 @@ This project is a modernized Flutter Minesweeper game, with a focus on robust ga
 - ✅ **Chording functionality implemented** (right-click to reveal unflagged neighbors)
 - ✅ **UI improvements completed** including zoom controls, haptic feedback, and game over dialog
 - ✅ **Android build issues resolved** with Java 17 and Kotlin DSL
+- ✅ **Game configuration validation implemented** with compile-time duplicate detection
+- ✅ **Bomb explosion display fixed** with clear visual distinction for different cell states
+- ✅ **Settings UX improved** with consistent auto-close behavior and educational tooltips
+- ✅ **Auto-generated descriptions** for game modes to reduce maintenance
+
+## Recent Major Improvements (Latest Session)
+1. **✅ Game Configuration Validation** - App now fails to start if there are duplicate game mode IDs or names
+2. **✅ Bomb Display Enhancement** - Clear visual distinction between:
+   - 💣 (Red bomb on yellow background): The bomb that killed you
+   - 💣 (Bomb on red background): Other hidden bombs
+   - 🚩 (Flag): Correctly flagged mines
+   - ❌ (Black X): Incorrectly flagged non-mines
+3. **✅ Settings UX Consistency** - All game-affecting changes now auto-close settings
+4. **✅ Educational Tooltips** - Help icon explains kickstarter mode vs classic mode
+5. **✅ Auto-generated Descriptions** - Game mode descriptions generated from grid dimensions
 
 ## Immediate TODOs (Next Session)
-1. **Create Constants File** - Centralize game configuration for easy adjustment of game modes, sizes, and mine counts
-2. **Settings UI Improvements** - Hide settings panel and restart game when board size changes are confirmed
-3. **50/50 Situation Detection** - Identify and handle classic Minesweeper scenarios where two cells have equal probability
+1. **50/50 Situation Detection** - Identify and handle classic Minesweeper scenarios where two cells have equal probability
+2. **Advanced Game Features** - Implement undo, hints, and auto-flagging
+3. **ML Integration Preparation** - Set up infrastructure for future ML-powered assistance
 
 ## Current Goals
 - Ensure all core game logic is bug-free and well-tested
