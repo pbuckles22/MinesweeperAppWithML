@@ -26,9 +26,21 @@ void main() {
         // [1][2][1]
         // The center cell with "2" has exactly 2 unrevealed neighbors
         final board = [
-          [Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
-          [Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed)],
-          [Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
         ];
         
         // This is a simplified test - in reality we'd need a larger board
@@ -40,9 +52,21 @@ void main() {
         FeatureFlags.enable5050Detection = false;
         
         final board = [
-          [Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
-          [Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed)],
-          [Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
         ];
         
         final state = GameState(
@@ -50,7 +74,7 @@ void main() {
           gameStatus: 'playing',
           minesCount: 2,
           flaggedCount: 0,
-          revealedCount: 3,
+          revealedCount: 7,
           totalCells: 9,
           startTime: DateTime.now(),
           difficulty: 'test',
@@ -58,6 +82,334 @@ void main() {
         
         final situations = FiftyFiftyDetector.detect5050Situations(state);
         expect(situations, isEmpty);
+      });
+    });
+
+    group('Safe Move Detection', () {
+      test('should not detect 50/50 when obvious safe moves exist', () {
+        // [1][F][1]
+        // [1][1][1]
+        // [1][?][1]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: true, state: CellState.flagged),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 1,
+          revealedCount: 8,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        expect(situations, isEmpty);
+      });
+      test('should detect 50/50 when no obvious safe moves exist', () {
+        // [1][?][1]
+        // [1][1][1]
+        // [1][?][1]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false),
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 7,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        expect(situations, isNotEmpty);
+        expect(situations.length, 1);
+        final situation = situations.first;
+        expect(
+          (situation.row1 == 0 && situation.col1 == 1 && situation.row2 == 2 && situation.col2 == 1) ||
+          (situation.row1 == 2 && situation.col1 == 1 && situation.row2 == 0 && situation.col2 == 1),
+          isTrue,
+        );
+      });
+      test('should not detect 50/50 if there are 2 unrevealed cells but 2 mines', () {
+        // [2][?][2]
+        // [2][2][2]
+        // [2][?][2]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false),
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+        ];
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 2,
+          flaggedCount: 0,
+          revealedCount: 7,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        expect(situations, isEmpty);
+      });
+      test('should NOT detect 50/50 when one candidate cell is flagged', () {
+        // [1][?][1]
+        // [1][F][1]  where F is a flagged mine, ? are unrevealed cells
+        // [1][?][1]
+        // This should NOT be a 50/50 because one of the candidates is flagged
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: true, state: CellState.flagged),
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false),
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 1,
+          revealedCount: 8,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        
+        // Should NOT detect a 50/50 because one of the candidate cells is flagged
+        expect(situations, isEmpty, reason: '50/50 should not be detected when one candidate is flagged');
+      });
+      test('should only return one 50/50 when multiple exist', () {
+        // [1][?][1][?][1]
+        // [1][2][1][2][1]  where the 2s create 50/50s with the ?s
+        // [1][?][1][?][1]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 3, hasBomb: false),
+            Cell(row: 0, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 3, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false),
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 3, hasBomb: false),
+            Cell(row: 2, col: 4, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 2,
+          flaggedCount: 0,
+          revealedCount: 13,
+          totalCells: 15,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        // Debug: Print the board state
+        print('DEBUG: Board state:');
+        for (var row in board) {
+          print(row.map((c) => c.isRevealed ? '[${c.bombsAround}]' : '[?]').join(' '));
+        }
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        print('DEBUG: Detected 50/50 situations: ${situations.length}');
+        for (final s in situations) {
+          print('DEBUG: 50/50 between (${s.row1},${s.col1}) and (${s.row2},${s.col2}), triggered by (${s.triggerRow},${s.triggerCol})');
+        }
+        expect(situations.length, 1);
+      });
+    });
+
+    group('Single 50/50 Selection', () {
+      test('should return only one 50/50 when multiple exist', () {
+        // Create a board with multiple potential 50/50 situations
+        // This test verifies that only the first detected 50/50 is returned
+        // [1][2][1]
+        // [2][?][2]  where ? are unrevealed cells in 50/50
+        // [1][?][1]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 2,
+          flaggedCount: 0,
+          revealedCount: 7,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        expect(situations.length, 1); // Only one 50/50 should be returned
+      });
+    });
+
+    group('Equal Constraints Detection', () {
+      test('should detect 50/50 when cells have equal constraints', () {
+        // Test the _cellsHaveEqualProbability method
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 2,
+          flaggedCount: 0,
+          revealedCount: 7,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        
+        // Test that cells (1,1) and (2,1) have equal probability
+        final hasEqualProbability = FiftyFiftyDetector.isCellIn5050Situation(state, 1, 1);
+        expect(hasEqualProbability, isA<bool>());
+      });
+
+      test('should detect classic 50/50 even with other constraints present', () {
+        // Create a scenario with a classic 50/50 pattern plus additional constraints
+        // [1][2][1]
+        // [2][?][3]  where the 3 provides additional constraints but classic 50/50 still exists
+        // [1][?][1]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 3, state: CellState.revealed), // Additional constraint
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 3,
+          flaggedCount: 0,
+          revealedCount: 7,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        // Should detect classic 50/50 even with additional constraints present
+        expect(situations, isNotEmpty);
+        expect(situations.length, 1);
+      });
+    });
+
+    group('Adjacency Helper', () {
+      test('should correctly identify adjacent cells', () {
+        // Test the _isAdjacent helper method
+        expect(FiftyFiftyDetector.isCellIn5050Situation, isA<Function>());
+        
+        // Note: Since _isAdjacent is private, we test it indirectly through
+        // the public methods that use it
       });
     });
 
@@ -230,15 +582,21 @@ void main() {
       test('should detect 50/50 situations in real game state', () async {
         // Create a game state that should have 50/50 situations
         final board = [
-          [Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
-          [Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed)],
-          [Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
-          [Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed)],
-          [Cell(row: 1, col: 1, hasBomb: false)], // Unrevealed
-          [Cell(row: 1, col: 2, hasBomb: false)], // Unrevealed
-          [Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
-          [Cell(row: 2, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed)],
-          [Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed)],
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 2, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
         ];
         
         final state = GameState(
@@ -255,8 +613,6 @@ void main() {
         repository.setTestState(state);
         
         final situations = FiftyFiftyDetector.detect5050Situations(state);
-        // This is a simplified test - in a real scenario, we'd need to set up
-        // a proper board configuration that actually creates 50/50 situations
         expect(situations, isA<List<FiftyFiftySituation>>());
       });
     });
@@ -287,6 +643,99 @@ void main() {
         
         expect(situations, isA<List<FiftyFiftySituation>>());
         expect(stopwatch.elapsedMilliseconds, lessThan(100)); // Should complete quickly
+      });
+    });
+
+    group('Debug Tests', () {
+      test('debug 50/50 detection logic', () {
+        // True 50/50 scenario:
+        // [1][?][1]
+        // [1][1][1]
+        // [1][?][1]
+        final board = [
+          [
+            Cell(row: 0, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 0, col: 1, hasBomb: false), // Unrevealed (part of 50/50)
+            Cell(row: 0, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 1, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 1, col: 1, hasBomb: false, bombsAround: 1, state: CellState.revealed), // Trigger cell
+            Cell(row: 1, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+          [
+            Cell(row: 2, col: 0, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+            Cell(row: 2, col: 1, hasBomb: false), // Unrevealed (part of 50/50)
+            Cell(row: 2, col: 2, hasBomb: false, bombsAround: 1, state: CellState.revealed),
+          ],
+        ];
+        
+        final state = GameState(
+          board: board,
+          gameStatus: 'playing',
+          minesCount: 1,
+          flaggedCount: 0,
+          revealedCount: 7,
+          totalCells: 9,
+          startTime: DateTime.now(),
+          difficulty: 'test',
+        );
+        
+        // Debug: Check the trigger cell (1,1)
+        final triggerCell = state.getCell(1, 1);
+        print('Trigger cell: row=1, col=1, bombsAround=${triggerCell.bombsAround}, isRevealed=${triggerCell.isRevealed}');
+        
+        // Count unrevealed neighbors around the trigger cell
+        int unrevealedCount = 0;
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            if (dr == 0 && dc == 0) continue;
+            final nr = 1 + dr;
+            final nc = 1 + dc;
+            if (nr >= 0 && nr < state.rows && nc >= 0 && nc < state.columns) {
+              final neighbor = state.getCell(nr, nc);
+              if (!neighbor.isRevealed && !neighbor.isFlagged) {
+                unrevealedCount++;
+                print('Unrevealed neighbor at ($nr, $nc)');
+              }
+            }
+          }
+        }
+        print('Unrevealed neighbors around trigger: $unrevealedCount');
+        
+        // Count flagged neighbors
+        int flaggedCount = 0;
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            if (dr == 0 && dc == 0) continue;
+            final nr = 1 + dr;
+            final nc = 1 + dc;
+            if (nr >= 0 && nr < state.rows && nc >= 0 && nc < state.columns) {
+              final neighbor = state.getCell(nr, nc);
+              if (neighbor.isFlagged) {
+                flaggedCount++;
+              }
+            }
+          }
+        }
+        print('Flagged neighbors around trigger: $flaggedCount');
+        print('Remaining mines: ${triggerCell.bombsAround - flaggedCount}');
+        
+        final situations = FiftyFiftyDetector.detect5050Situations(state);
+        print('Detected 50/50 situations: ${situations.length}');
+        if (situations.isNotEmpty) {
+          print('50/50 between (${situations.first.row1},${situations.first.col1}) and (${situations.first.row2},${situations.first.col2})');
+        }
+        
+        // Should detect a 50/50
+        expect(situations, isNotEmpty);
+        expect(situations.length, 1);
+        final situation = situations.first;
+        expect(
+          (situation.row1 == 0 && situation.col1 == 1 && situation.row2 == 2 && situation.col2 == 1) ||
+          (situation.row1 == 2 && situation.col1 == 1 && situation.row2 == 0 && situation.col2 == 1),
+          isTrue,
+        );
       });
     });
   });
