@@ -39,7 +39,7 @@ class Cell {
   }
 
   void toggleFlag() {
-    if (state == CellState.unrevealed) {
+    if (state == CellState.unrevealed || state == CellState.fiftyFifty) {
       state = CellState.flagged;
     } else if (state == CellState.flagged) {
       state = CellState.unrevealed;

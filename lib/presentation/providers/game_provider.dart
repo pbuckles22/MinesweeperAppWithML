@@ -155,7 +155,7 @@ class GameProvider extends ChangeNotifier {
     
     try {
       final cell = _gameState!.getCell(row, col);
-      return cell.isUnrevealed || (cell.isFlagged && isPlaying);
+      return cell.isUnrevealed || cell.isFiftyFifty || cell.isFlagged;
     } catch (e) {
       return false;
     }

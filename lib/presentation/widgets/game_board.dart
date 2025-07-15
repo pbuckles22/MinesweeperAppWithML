@@ -152,12 +152,16 @@ class _GameBoardState extends State<GameBoard> {
     final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
     
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onScaleStart: (details) {
-        // Store initial zoom level for pinch gesture
+        // Only handle multi-touch gestures for zoom
+        if (details.pointerCount > 1) {
+          // Store initial zoom level for pinch gesture
+        }
       },
       onScaleUpdate: (details) {
-        // Handle pinch-to-zoom with slower scaling
-        if (details.scale != 1.0) {
+        // Only handle multi-touch gestures for zoom
+        if (details.pointerCount > 1 && details.scale != 1.0) {
           setState(() {
             // Use a much smaller scale factor for pinch gestures to make it less sensitive
             // Fix zoom out by properly handling scale < 1.0

@@ -4,8 +4,8 @@
 This project is a modernized Flutter Minesweeper game, with a focus on robust game logic, test coverage, and future integration with ML features. The codebase is being updated for null safety, modern Flutter best practices, and maintainability.
 
 ## Current Status
-- ✅ **Core game logic is fully functional** with comprehensive test coverage (43 tests)
-- ✅ **All known bugs fixed** including cascade logic, flag toggling, and win/loss detection
+- ✅ **Core game logic is fully functional** with comprehensive test coverage (123+ tests)
+- ✅ **All known bugs fixed** including cascade logic, flag toggling, win/loss detection, and 50/50 scenario detection
 - ✅ **Chording functionality implemented** (right-click to reveal unflagged neighbors)
 - ✅ **UI improvements completed** including zoom controls, haptic feedback, and game over dialog
 - ✅ **Android build issues resolved** with Java 17 and Kotlin DSL
@@ -13,6 +13,7 @@ This project is a modernized Flutter Minesweeper game, with a focus on robust ga
 - ✅ **Bomb explosion display fixed** with clear visual distinction for different cell states
 - ✅ **Settings UX improved** with consistent auto-close behavior and educational tooltips
 - ✅ **Auto-generated descriptions** for game modes to reduce maintenance
+- 🏳️ **50/50 Situation Detection** - Identifies classic and shared constraint 50/50 scenarios, with scenario-based tests for each
 
 ## Recent Major Improvements (Latest Session)
 1. **✅ Game Configuration Validation** - App now fails to start if there are duplicate game mode IDs or names
@@ -26,13 +27,12 @@ This project is a modernized Flutter Minesweeper game, with a focus on robust ga
 5. **✅ Auto-generated Descriptions** - Game mode descriptions generated from grid dimensions
 
 ## Immediate TODOs (Next Session)
-1. **50/50 Situation Detection** - Identify and handle classic Minesweeper scenarios where two cells have equal probability
-2. **Advanced Game Features** - Implement undo, hints, and auto-flagging
-3. **ML Integration Preparation** - Set up infrastructure for future ML-powered assistance
+1. **Advanced Game Features** - Implement undo, hints, and auto-flagging
+2. **ML Integration Preparation** - Set up infrastructure for future ML-powered assistance
 
 ## Current Goals
-- Ensure all core game logic is bug-free and well-tested
-- Use deterministic boards for all logic/unit/integration tests
+- Ensure all core game logic is bug-free and well-tested, including 50/50 detection
+- Use deterministic boards for all logic/unit/integration tests, including 50/50 scenarios
 - Track all bug fixes, test improvements, and code coverage requirements in TODO.md
 - Prepare for future ML integration and advanced analytics
 

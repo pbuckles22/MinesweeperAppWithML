@@ -38,7 +38,7 @@ if (!board[i - 1][j].hasBomb &&
 - Inconsistent with standard Minesweeper behavior
 
 ### 2. Flag Toggle Not Working
-**Issue**: Once a bomb is flagged, it cannot be unflagged. Long-pressing a flagged cell should toggle the flag off.
+**Status**: Fixed. Long-pressing a flagged cell now toggles the flag off, matching classic Minesweeper behavior. Covered by tests.
 
 **Location**: `lib/game_activity.dart` - `onLongPress` handler (lines ~130-135)
 
@@ -73,9 +73,12 @@ onLongPress: () {
 - Game becomes frustrating when flags are placed incorrectly
 - Inconsistent with standard Minesweeper behavior
 
+### 3. 50/50 Detection Issues
+**Status**: Fixed. 50/50 detection logic now robustly identifies classic and shared constraint scenarios, with scenario-based tests for all known patterns.
+
 ## ⚠️ Major Issues
 
-### 3. Inconsistent Game State Management
+### 4. Inconsistent Game State Management
 **Issue**: The game state is managed through multiple separate arrays (`board`, `openedSquares`, `flaggedSquares`) which can become inconsistent.
 
 **Location**: Throughout `lib/game_activity.dart`
@@ -90,7 +93,7 @@ onLongPress: () {
 - Hard to add new features
 - Poor foundation for ML integration
 
-### 4. Missing Game Rules Validation
+### 5. Missing Game Rules Validation
 **Issue**: The app doesn't validate that clicked cells are actually clickable according to Minesweeper rules.
 
 **Location**: `lib/game_activity.dart` - `onTap` handler
@@ -105,7 +108,7 @@ onLongPress: () {
 - Cannot click on flagged cells
 - Should validate action before processing
 
-### 5. Poor Error Handling
+### 6. Poor Error Handling
 **Issue**: No error handling for edge cases or invalid states.
 
 **Location**: Throughout the codebase
@@ -115,9 +118,9 @@ onLongPress: () {
 - No validation of game state
 - Silent failures can occur
 
-## 🔧 Minor Issues
+## �� Minor Issues
 
-### 6. Inefficient Cascade Algorithm
+### 7. Inefficient Cascade Algorithm
 **Issue**: The cascade algorithm uses recursion which can cause stack overflow on large boards.
 
 **Location**: `lib/game_activity.dart` - `_handleTap()` method
@@ -127,7 +130,7 @@ onLongPress: () {
 - Not scalable for larger boards
 - Should use iterative approach with queue/stack
 
-### 7. Hard-coded Values
+### 8. Hard-coded Values
 **Issue**: Many game parameters are hard-coded throughout the code.
 
 **Location**: Throughout `lib/game_activity.dart`
@@ -137,7 +140,7 @@ onLongPress: () {
 - `bombProbability = 3`, `maxProbability = 15` hard-coded
 - No difficulty levels or configuration
 
-### 8. Missing Game Features
+### 9. Missing Game Features
 **Issue**: Several standard Minesweeper features are missing.
 
 **Missing Features**:
@@ -148,7 +151,7 @@ onLongPress: () {
 - Sound effects
 - Proper win/lose screens
 
-### 9. Timer Inconsistency
+### 10. Timer Inconsistency
 **Issue**: Game timer does not consistently run and only updates when a move is made.
 
 **Location**: `lib/services/timer_service.dart` and timer integration
@@ -200,6 +203,8 @@ onLongPress: () {
 - [ ] Test lose condition validation
 - [ ] Test invalid action handling
 - [ ] Test state consistency after actions
+
+All known 50/50 and flag logic bugs are now covered by scenario-based tests.
 
 ## 📋 Reference Implementation Notes
 

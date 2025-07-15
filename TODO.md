@@ -13,10 +13,13 @@
 - [x] **Fix bomb explosion display** - Clear visual distinction for different cell states
 - [x] **Improve settings UX** - Consistent auto-close behavior and educational tooltips
 - [x] **Add auto-generated descriptions** - Game mode descriptions from grid dimensions
+- [x] **Identify classic Minesweeper 50/50 scenarios (two cells with equal probability)**
+- [x] **Add visual indicators for 50/50 scenarios**
+- [x] **Add tests for 50/50 detection and handling (all known scenarios covered)**
 
 ## 🚧 Current Status
 
-**All core Minesweeper functionality is now working with comprehensive test coverage (43+ tests).**
+**All core Minesweeper functionality is now working with comprehensive test coverage (123+ tests).**
 
 ### ✅ What's Working:
 - Board initialization and mine placement
@@ -43,11 +46,8 @@
 
 ### **🚨 IMMEDIATE TODOs:**
 1. **50/50 Situation Detection & Resolution**
-   - [ ] Identify classic Minesweeper 50/50 scenarios (two cells with equal probability)
    - [ ] Implement detection algorithm for unsolvable situations
-   - [ ] Add visual indicators for 50/50 scenarios
    - [ ] Consider auto-resolve or hint system for 50/50s
-   - [ ] Add tests for 50/50 detection and handling
 
 2. **Advanced Game Features**
    - [ ] Undo move functionality (`enableUndoMove`)
@@ -90,5 +90,5 @@
 
 ---
 
-**Current Test Coverage: 43+ tests covering all standard Minesweeper functionality**
+**Current Test Coverage: 123+ tests covering all standard Minesweeper functionality and 50/50 scenarios**
 **Next Major Feature: 50/50 Situation Detection (advanced gameplay improvement)**

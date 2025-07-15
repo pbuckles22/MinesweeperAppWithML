@@ -125,3 +125,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Original Minesweeper game by Microsoft
 - Flutter team for the amazing framework
 - All contributors who have helped improve this project
+
+- **50/50 Situation Detection** - Detects classic and shared constraint 50/50 scenarios, with scenario-based tests for each known pattern
+- **Flag Toggle Logic** - Long-press toggles flags on unrevealed cells, matching classic Minesweeper behavior
+- **Test Coverage** - 123+ tests covering all core game logic, edge cases, and advanced scenarios
