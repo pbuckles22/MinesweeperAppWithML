@@ -6,6 +6,7 @@ import '../widgets/game_board.dart';
 import '../widgets/game_over_dialog.dart';
 import 'settings_page.dart';
 import '../../core/constants.dart';
+import '../../services/timer_service.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({Key? key}) : super(key: key);
@@ -159,8 +160,6 @@ class _GamePageState extends State<GamePage> {
       ),
     );
   }
-
-
 
   @override
   void dispose() {

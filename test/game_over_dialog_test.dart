@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_minesweeper/presentation/widgets/game_over_dialog.dart';
+import 'package:flutter_minesweeper/services/timer_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

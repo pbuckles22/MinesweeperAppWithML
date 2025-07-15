@@ -5,6 +5,7 @@ import 'package:flutter_minesweeper/presentation/providers/game_provider.dart';
 import 'package:flutter_minesweeper/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
+import 'package:flutter_minesweeper/services/timer_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          ChangeNotifierProvider(create: (_) => TimerService()),
           ChangeNotifierProvider(create: (_) => GameProvider()),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
@@ -111,10 +113,13 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          ChangeNotifierProvider(create: (_) => TimerService()),
           ChangeNotifierProvider(create: (_) => GameProvider()),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
-        child: const MaterialApp(home: GamePage()),
+        child: MaterialApp(
+          home: GamePage(),
+        ),
       ),
     );
 

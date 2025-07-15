@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../domain/entities/cell.dart';
 import '../../domain/entities/game_state.dart';
 import '../providers/game_provider.dart';
+import '../../services/timer_service.dart';
 import 'cell_widget.dart';
 import '../../core/feature_flags.dart';
 
@@ -81,8 +82,8 @@ class _GameBoardState extends State<GameBoard> {
           
           // Timer with continuous updates
           Consumer<GameProvider>(
-            builder: (context, provider, child) {
-              final elapsed = provider.timerService.elapsed;
+            builder: (context, gameProvider, child) {
+              final elapsed = gameProvider.timerService.elapsed;
               final timeString = '${elapsed.inMinutes.toString().padLeft(2, '0')}:${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}';
               return _buildStatCard(
                 context,

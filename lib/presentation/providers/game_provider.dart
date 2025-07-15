@@ -18,7 +18,12 @@ class GameProvider extends ChangeNotifier {
 
   GameProvider({GameRepository? repository, TimerService? timerService}) 
       : _repository = repository ?? GameRepositoryImpl(),
-        _timerService = timerService ?? TimerService();
+        _timerService = timerService ?? TimerService() {
+    // Listen to timer changes and propagate them to UI
+    _timerService.addListener(() {
+      notifyListeners();
+    });
+  }
 
   // Getters
   GameState? get gameState => _gameState;

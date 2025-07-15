@@ -5,6 +5,7 @@ import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/data/repositories/game_repository_impl.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
 import 'package:flutter_minesweeper/core/feature_flags.dart';
+import 'package:flutter_minesweeper/services/timer_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
