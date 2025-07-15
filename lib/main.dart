@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 import 'presentation/providers/game_provider.dart';
 import 'presentation/providers/settings_provider.dart';
-import 'presentation/pages/game_page.dart';
 import 'core/game_mode_config.dart';
+import 'presentation/pages/game_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize game mode configuration
-  await GameModeConfig.instance.loadGameModes();
+  // Validate game configuration before app starts
+  try {
+    await GameModeConfig.instance.loadGameModes();
+    print('Game configuration validation passed');
+  } catch (e) {
+    print('CRITICAL ERROR: Game configuration validation failed: $e');
+    print('App will exit due to configuration error.');
+    // Force exit the app immediately
+    exit(1);
+  }
   
   runApp(const MinesweeperApp());
 }

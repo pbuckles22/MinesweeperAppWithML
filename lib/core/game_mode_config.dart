@@ -14,19 +14,24 @@ class GameMode {
   GameMode({
     required this.id,
     required this.name,
-    required this.description,
+    String? description,
     required this.rows,
     required this.columns,
     required this.mines,
     required this.enabled,
     this.icon,
-  });
+  }) : description = description ?? _generateDescription(rows, columns, mines);
+
+  /// Auto-generate description based on grid dimensions and mine count
+  static String _generateDescription(int rows, int columns, int mines) {
+    return '${rows}×${columns} grid, ${mines} mines';
+  }
 
   factory GameMode.fromJson(Map<String, dynamic> json) {
     return GameMode(
       id: json['id'] as String,
       name: json['name'] as String,
-      description: json['description'] as String,
+      description: json['description'] as String?, // Now optional
       rows: json['rows'] as int,
       columns: json['columns'] as int,
       mines: json['mines'] as int,
@@ -80,7 +85,21 @@ class GameModeConfig {
   static CustomSettings? _customSettings;
   static bool _isLoaded = false;
 
-  GameModeConfig._();
+  GameModeConfig._() {
+    // Validate configuration immediately when instance is created
+    _validateConfiguration();
+  }
+
+  /// Validate the game mode configuration at build/load time
+  void _validateConfiguration() {
+    try {
+      // This will be called when the class is first accessed
+      // We'll validate during the first load
+    } catch (e) {
+      // Re-throw validation errors immediately
+      rethrow;
+    }
+  }
 
   /// Load game modes from JSON file
   Future<void> loadGameModes() async {
@@ -94,7 +113,32 @@ class GameModeConfig {
       print('GameModeConfig: Parsed JSON object:');
       print(json);
       
-      _gameModes = (json['game_modes'] as List)
+      final List<dynamic> gameModesJson = json['game_modes'] as List;
+      
+      // Validate for duplicate IDs and names
+      final Set<String> ids = <String>{};
+      final Set<String> names = <String>{};
+      
+      for (final modeJson in gameModesJson) {
+        final id = modeJson['id'] as String;
+        final name = modeJson['name'] as String;
+        
+        if (ids.contains(id)) {
+          final error = ArgumentError('Duplicate game mode ID found: "$id". All game mode IDs must be unique.');
+          print('GameModeConfig: VALIDATION ERROR - $error');
+          throw error;
+        }
+        if (names.contains(name)) {
+          final error = ArgumentError('Duplicate game mode name found: "$name". All game mode names must be unique.');
+          print('GameModeConfig: VALIDATION ERROR - $error');
+          throw error;
+        }
+        
+        ids.add(id);
+        names.add(name);
+      }
+      
+      _gameModes = gameModesJson
           .map((mode) => GameMode.fromJson(mode))
           .toList();
       print('GameModeConfig: Parsed game_modes:');
@@ -109,8 +153,13 @@ class GameModeConfig {
       _isLoaded = true;
       print('GameModeConfig: Loaded ${_gameModes.length} game modes from JSON');
     } catch (e) {
-      print('GameModeConfig: Failed to load JSON, using fallback modes. Error: $e');
-      // Fallback to default values if JSON loading fails
+      print('GameModeConfig: Failed to load JSON. Error: $e');
+      if (e is ArgumentError) {
+        // Re-throw validation errors so they're visible
+        rethrow;
+      }
+      // Only fall back for other types of errors (file not found, JSON parse errors, etc.)
+      print('GameModeConfig: Using fallback modes due to non-validation error');
       _loadDefaultModes();
       _isLoaded = true;
     }

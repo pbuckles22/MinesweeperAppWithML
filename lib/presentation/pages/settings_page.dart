@@ -74,11 +74,26 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        settingsProvider.isKickstarterMode ? 'Kickstarter Mode' : 'Classic Mode',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            settingsProvider.isKickstarterMode ? 'Kickstarter Mode' : 'Classic Mode',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Tooltip(
+                            message: settingsProvider.isKickstarterMode 
+                                ? 'Kickstarter Mode: Your first click will always reveal a cascade (blank area), giving you a meaningful starting position. Mines are intelligently moved to ensure this happens.'
+                                : 'Classic Mode: Traditional Minesweeper rules. Your first click could hit a mine, reveal a single numbered cell, or trigger a cascade. Pure random chance.',
+                            child: Icon(
+                              Icons.help_outline,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -95,7 +110,7 @@ class SettingsPage extends StatelessWidget {
                 Switch(
                   value: settingsProvider.isFirstClickGuaranteeEnabled,
                   onChanged: (value) {
-                    settingsProvider.setGameMode(value);
+                    _handleGameModeChange(context, settingsProvider, value);
                   },
                   activeColor: Theme.of(context).colorScheme.primary,
                 ),
@@ -105,6 +120,61 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleGameModeChange(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    bool newValue,
+  ) {
+    // Check if there's an active game
+    final gameProvider = context.read<GameProvider>();
+    final hasActiveGame = gameProvider.gameState != null && 
+                         gameProvider.gameState!.gameStatus == 'playing';
+    
+    if (hasActiveGame) {
+      // Show confirmation dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Game in Progress'),
+          content: const Text(
+            'You have a game in progress. Changing the game mode will start a new game. Do you want to continue?'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _applyGameModeChange(context, settingsProvider, gameProvider, newValue);
+              },
+              child: const Text('Start New Game'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // No active game, just change mode
+      _applyGameModeChange(context, settingsProvider, gameProvider, newValue);
+    }
+  }
+
+  void _applyGameModeChange(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    GameProvider gameProvider,
+    bool newValue,
+  ) {
+    settingsProvider.setGameMode(newValue);
+    // Reset game with new mode
+    if (gameProvider.isGameInitialized) {
+      gameProvider.initializeGame(settingsProvider.selectedDifficulty);
+    }
+    // Close settings page to make behavior consistent with difficulty changes
+    Navigator.of(context).pop();
   }
 
   Widget _buildModeDescription(BuildContext context, SettingsProvider settingsProvider) {
@@ -182,8 +252,6 @@ class SettingsPage extends StatelessWidget {
       ),
     );
   }
-
-
 
   Widget _buildDifficultyOption(
     BuildContext context,
@@ -285,9 +353,7 @@ class SettingsPage extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                settingsProvider.setDifficulty(newDifficulty);
-                // Start new game with new difficulty
-                gameProvider.initializeGame(newDifficulty);
+                _applyDifficultyChange(context, settingsProvider, gameProvider, newDifficulty);
               },
               child: const Text('Start New Game'),
             ),
@@ -296,8 +362,21 @@ class SettingsPage extends StatelessWidget {
       );
     } else {
       // No active game, just change difficulty
-      settingsProvider.setDifficulty(newDifficulty);
+      _applyDifficultyChange(context, settingsProvider, gameProvider, newDifficulty);
     }
+  }
+
+  void _applyDifficultyChange(
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    GameProvider gameProvider,
+    String newDifficulty,
+  ) {
+    settingsProvider.setDifficulty(newDifficulty);
+    // Start new game with new difficulty
+    gameProvider.initializeGame(newDifficulty);
+    // Close settings page
+    Navigator.of(context).pop();
   }
 
   Widget _buildResetButton(BuildContext context, SettingsProvider settingsProvider) {

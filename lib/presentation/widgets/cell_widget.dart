@@ -31,12 +31,12 @@ class CellWidget extends StatelessWidget {
 
         return GestureDetector(
           onTap: () {
-            if (gameProvider.isValidAction(row, col)) {
+            if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
               onTap();
             }
           },
           onLongPress: () {
-            if (gameProvider.isValidAction(row, col)) {
+            if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
               HapticService.mediumImpact();
               onLongPress();
             }
@@ -61,7 +61,9 @@ class CellWidget extends StatelessWidget {
   }
 
   Color _getCellColor(BuildContext context, Cell cell) {
-    if (cell.isExploded) {
+    if (cell.isHitBomb) {
+      return Colors.yellow.shade600; // Yellow background for the bomb that was hit
+    } else if (cell.isExploded) {
       return Colors.red;
     } else if (cell.isIncorrectlyFlagged) {
       return Colors.red;
@@ -75,7 +77,13 @@ class CellWidget extends StatelessWidget {
   }
 
   Widget _buildCellContent(BuildContext context, Cell cell) {
-    if (cell.isFlagged) {
+    if (cell.isHitBomb) {
+      // The specific bomb that was clicked and caused the game to end
+      return const Text(
+        '💣', // Bomb emoji for the bomb that was hit
+        style: TextStyle(fontSize: 20, color: Colors.red), // Red bomb on yellow background
+      );
+    } else if (cell.isFlagged) {
       return Icon(
         Icons.flag,
         color: Theme.of(context).colorScheme.primary,
@@ -95,10 +103,9 @@ class CellWidget extends StatelessWidget {
       );
     } else if (cell.isRevealed) {
       if (cell.hasBomb) {
-        return Icon(
-          Icons.warning,
-          color: Colors.red,
-          size: 20,
+        return const Text(
+          '💣', // Bomb emoji for other bombs
+          style: TextStyle(fontSize: 20),
         );
       } else if (cell.bombsAround > 0) {
         return Text(

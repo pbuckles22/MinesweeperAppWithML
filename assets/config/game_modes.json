@@ -3,7 +3,6 @@
     {
       "id": "easy",
       "name": "Easy",
-      "description": "9×9 grid, 10 mines",
       "rows": 9,
       "columns": 9,
       "mines": 10,
@@ -13,7 +12,6 @@
     {
       "id": "normal",
       "name": "Normal", 
-      "description": "16×16 grid, 40 mines",
       "rows": 16,
       "columns": 16,
       "mines": 40,
@@ -23,12 +21,21 @@
     {
       "id": "hard",
       "name": "Hard",
-      "description": "16×30 grid, 99 mines", 
       "rows": 16,
       "columns": 30,
       "mines": 99,
       "enabled": true,
       "icon": "sentiment_dissatisfied"
+    },
+    {
+      "id": "1test",
+      "name": "1test",
+      "description": "1trrrrrr104 mines",
+      "rows": 9,
+      "columns": 9,
+      "mines": 13,
+      "enabled": true,
+      "icon": "warning"
     },
     {
       "id": "expert",

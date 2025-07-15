@@ -71,12 +71,12 @@ class GameRepositoryImpl implements GameRepository {
     // Create a copy of the board to modify
     final newBoard = _copyBoard(_currentState!.board);
     
-      // First Click Guarantee Logic
-  if (_isFirstClick && FeatureFlags.enableFirstClickGuarantee) {
-    _ensureFirstClickCascade(newBoard, row, col);
-    // Update bomb counts incrementally after mine relocation
-    _updateBombCountsAfterMineMove(newBoard);
-  }
+    // First Click Guarantee Logic
+    if (_isFirstClick && FeatureFlags.enableFirstClickGuarantee) {
+      _ensureFirstClickCascade(newBoard, row, col);
+      // Update bomb counts incrementally after mine relocation
+      _updateBombCountsAfterMineMove(newBoard);
+    }
     
     // Get the updated target cell after potential mine relocation
     final targetCell = newBoard[row][col];
@@ -88,8 +88,8 @@ class GameRepositoryImpl implements GameRepository {
     targetCell.reveal();
     
     if (targetCell.isExploded) {
-      // Game over - reveal all mines
-      _revealAllMines(newBoard, exploded: true);
+      // Game over - reveal all mines, marking the hit bomb specially
+      _revealAllMines(newBoard, exploded: true, hitBombRow: row, hitBombCol: col);
       _currentState = _currentState!.copyWith(
         board: newBoard,
         gameStatus: GameConstants.gameStateLost,
@@ -452,15 +452,19 @@ class GameRepositoryImpl implements GameRepository {
     revealCascade(board, row, col);
   }
 
-  void _revealAllMines(List<List<Cell>> board, {bool exploded = true}) {
+  void _revealAllMines(List<List<Cell>> board, {bool exploded = true, int? hitBombRow, int? hitBombCol}) {
     for (int row = 0; row < board.length; row++) {
       for (int col = 0; col < board[0].length; col++) {
         final cell = board[row][col];
         if (cell.hasBomb) {
-          // For mines: reveal if not flagged, leave flagged mines as flagged
-          if (!cell.isFlagged) {
+          // Check if this is the specific bomb that was hit
+          if (row == hitBombRow && col == hitBombCol) {
+            cell.forceReveal(isHitBomb: true);
+          } else if (!cell.isFlagged) {
+            // For unflagged mines: reveal as exploded
             cell.forceReveal(exploded: exploded);
           }
+          // For flagged mines: keep them flagged (don't call forceReveal)
         } else {
           // For non-mines: show black X if incorrectly flagged
           if (cell.isFlagged) {

@@ -129,6 +129,8 @@ class _GamePageState extends State<GamePage> {
         onClose: () {
           Navigator.of(context).pop();
           _showGameOverDialog = false;
+          // The board should already be in the correct state from the repository
+          // No need to force a UI update
         },
       ),
     );

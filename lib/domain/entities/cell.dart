@@ -4,6 +4,7 @@ enum CellState {
   flagged,
   exploded,
   incorrectlyFlagged,
+  hitBomb,
 }
 
 class Cell {
@@ -26,6 +27,7 @@ class Cell {
   bool get isExploded => state == CellState.exploded;
   bool get isUnrevealed => state == CellState.unrevealed;
   bool get isIncorrectlyFlagged => state == CellState.incorrectlyFlagged;
+  bool get isHitBomb => state == CellState.hitBomb;
   bool get isEmpty => !hasBomb && bombsAround == 0;
 
   void reveal() {
@@ -42,21 +44,27 @@ class Cell {
     }
   }
 
-  void forceReveal({bool exploded = true, bool showIncorrectFlag = false}) {
+  void forceReveal({bool exploded = true, bool showIncorrectFlag = false, bool isHitBomb = false}) {
+    if (isHitBomb && hasBomb) {
+      // This is the specific bomb that was clicked and caused the game to end
+      state = CellState.hitBomb;
+      return;
+    }
+    
     if (state == CellState.flagged) {
       if (showIncorrectFlag && !hasBomb) {
         // Show black X for incorrectly flagged non-mines
         state = CellState.incorrectlyFlagged;
+      } else if (hasBomb && !exploded) {
+        // For flagged bombs when not exploded, keep them flagged
+        // This preserves the flag for correctly flagged mines during gameplay
+        return;
+      } else if (hasBomb && exploded) {
+        // For flagged bombs when game is over, reveal them to show the X
+        state = CellState.exploded;
       } else {
-        // Remove flag and reveal normally
-        state = CellState.unrevealed;
-        if (state == CellState.unrevealed) {
-          if (hasBomb) {
-            state = exploded ? CellState.exploded : CellState.revealed;
-          } else {
-            state = CellState.revealed;
-          }
-        }
+        // Remove flag from non-mines and reveal
+        state = CellState.revealed;
       }
     } else if (state == CellState.unrevealed) {
       if (hasBomb) {
