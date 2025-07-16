@@ -25,6 +25,13 @@ class GameProvider extends ChangeNotifier {
     });
   }
 
+  // Test-only setter for widget integration tests
+  @visibleForTesting
+  set testGameState(GameState state) {
+    _gameState = state;
+    notifyListeners();
+  }
+
   // Getters
   GameState? get gameState => _gameState;
   bool get isLoading => _isLoading;
@@ -133,6 +140,15 @@ class GameProvider extends ChangeNotifier {
   void forceResetRepository() {
     if (_repository is GameRepositoryImpl) {
       (_repository as GameRepositoryImpl).forceReset();
+    }
+  }
+
+  // Refresh state from repository (useful for testing)
+  void refreshState() {
+    if (_repository is GameRepositoryImpl) {
+      final repo = _repository as GameRepositoryImpl;
+      _gameState = repo.getCurrentState();
+      notifyListeners();
     }
   }
 
