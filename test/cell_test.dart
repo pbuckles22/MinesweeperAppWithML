@@ -200,5 +200,188 @@ void main() {
         expect(cell.state, equals(CellState.hitBomb));
       });
     });
+
+    group('toggleFlag() Method', () {
+      test('should flag an unrevealed cell', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false);
+        cell.toggleFlag();
+        expect(cell.state, equals(CellState.flagged));
+        expect(cell.isFlagged, isTrue);
+      });
+
+      test('should unflag a flagged cell', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.flagged);
+        cell.toggleFlag();
+        expect(cell.state, equals(CellState.unrevealed));
+        expect(cell.isUnrevealed, isTrue);
+      });
+
+      test('should flag a fiftyFifty cell', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.fiftyFifty);
+        cell.toggleFlag();
+        expect(cell.state, equals(CellState.flagged));
+      });
+
+      test('should not flag a revealed cell', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.revealed);
+        cell.toggleFlag();
+        expect(cell.state, equals(CellState.revealed));
+      });
+
+      test('should not flag an exploded cell', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true, state: CellState.exploded);
+        cell.toggleFlag();
+        expect(cell.state, equals(CellState.exploded));
+      });
+    });
+
+    group('markAsFiftyFifty() and unmarkFiftyFifty() Methods', () {
+      test('should mark an unrevealed cell as fiftyFifty', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false);
+        cell.markAsFiftyFifty();
+        expect(cell.state, equals(CellState.fiftyFifty));
+        expect(cell.isFiftyFifty, isTrue);
+      });
+
+      test('should not mark a revealed cell as fiftyFifty', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.revealed);
+        cell.markAsFiftyFifty();
+        expect(cell.state, equals(CellState.revealed));
+      });
+
+      test('should unmark a fiftyFifty cell to unrevealed', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.fiftyFifty);
+        cell.unmarkFiftyFifty();
+        expect(cell.state, equals(CellState.unrevealed));
+        expect(cell.isUnrevealed, isTrue);
+      });
+
+      test('should not unmark a non-fiftyFifty cell', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.revealed);
+        cell.unmarkFiftyFifty();
+        expect(cell.state, equals(CellState.revealed));
+      });
+    });
+
+    group('forceReveal() Method', () {
+      test('should set state to hitBomb if isHitBomb and hasBomb', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true);
+        cell.forceReveal(isHitBomb: true);
+        expect(cell.state, equals(CellState.hitBomb));
+        expect(cell.isHitBomb, isTrue);
+      });
+
+      test('should set state to incorrectlyFlagged if flagged, showIncorrectFlag, and not a bomb', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.flagged);
+        cell.forceReveal(showIncorrectFlag: true);
+        expect(cell.state, equals(CellState.incorrectlyFlagged));
+        expect(cell.isIncorrectlyFlagged, isTrue);
+      });
+
+      test('should keep flagged state if flagged, hasBomb, and not exploded', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true, state: CellState.flagged);
+        cell.forceReveal(exploded: false);
+        expect(cell.state, equals(CellState.flagged));
+        expect(cell.isFlagged, isTrue);
+      });
+
+      test('should set state to exploded if flagged, hasBomb, and exploded', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true, state: CellState.flagged);
+        cell.forceReveal(exploded: true);
+        expect(cell.state, equals(CellState.exploded));
+        expect(cell.isExploded, isTrue);
+      });
+
+      test('should set state to revealed if flagged, not a bomb, and not showIncorrectFlag', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.flagged);
+        cell.forceReveal();
+        expect(cell.state, equals(CellState.revealed));
+        expect(cell.isRevealed, isTrue);
+      });
+
+      test('should set state to revealed if unrevealed and not a bomb', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false);
+        cell.forceReveal();
+        expect(cell.state, equals(CellState.revealed));
+      });
+
+      test('should set state to exploded if unrevealed and hasBomb', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true);
+        cell.forceReveal();
+        expect(cell.state, equals(CellState.exploded));
+      });
+
+      test('should set state to revealed if unrevealed and hasBomb but exploded is false', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true);
+        cell.forceReveal(exploded: false);
+        expect(cell.state, equals(CellState.revealed));
+      });
+
+      test('should set state to revealed if fiftyFifty and not a bomb', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: false, state: CellState.fiftyFifty);
+        cell.forceReveal();
+        expect(cell.state, equals(CellState.revealed));
+      });
+
+      test('should set state to exploded if fiftyFifty and hasBomb', () {
+        final cell = Cell(row: 0, col: 0, hasBomb: true, state: CellState.fiftyFifty);
+        cell.forceReveal();
+        expect(cell.state, equals(CellState.exploded));
+      });
+    });
+
+    group('copyWith() Method', () {
+      test('should copy cell with no changes if no arguments', () {
+        final cell = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        final copy = cell.copyWith();
+        expect(copy, equals(cell));
+        expect(copy.hashCode, equals(cell.hashCode));
+      });
+
+      test('should copy cell with new values', () {
+        final cell = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        final copy = cell.copyWith(row: 5, col: 6, hasBomb: false, bombsAround: 1, state: CellState.revealed);
+        expect(copy.row, equals(5));
+        expect(copy.col, equals(6));
+        expect(copy.hasBomb, isFalse);
+        expect(copy.bombsAround, equals(1));
+        expect(copy.state, equals(CellState.revealed));
+      });
+    });
+
+    group('Equality and hashCode', () {
+      test('should be equal if all properties are the same', () {
+        final cell1 = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        final cell2 = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        expect(cell1, equals(cell2));
+        expect(cell1.hashCode, equals(cell2.hashCode));
+      });
+
+      test('should not be equal if any property is different', () {
+        final cell1 = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        final cell2 = Cell(row: 1, col: 2, hasBomb: false, bombsAround: 3, state: CellState.flagged);
+        final cell3 = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 2, state: CellState.flagged);
+        final cell4 = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.revealed);
+        final cell5 = Cell(row: 0, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        final cell6 = Cell(row: 1, col: 0, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        expect(cell1 == cell2, isFalse);
+        expect(cell1 == cell3, isFalse);
+        expect(cell1 == cell4, isFalse);
+        expect(cell1 == cell5, isFalse);
+        expect(cell1 == cell6, isFalse);
+      });
+    });
+
+    group('toString() Method', () {
+      test('should return a string representation of the cell', () {
+        final cell = Cell(row: 1, col: 2, hasBomb: true, bombsAround: 3, state: CellState.flagged);
+        final str = cell.toString();
+        expect(str, contains('row: 1'));
+        expect(str, contains('col: 2'));
+        expect(str, contains('hasBomb: true'));
+        expect(str, contains('bombsAround: 3'));
+        expect(str, contains('state: CellState.flagged'));
+      });
+    });
   });
 } 
