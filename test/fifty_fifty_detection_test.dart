@@ -3,7 +3,38 @@ import 'package:flutter_minesweeper/services/fifty_fifty_detector.dart';
 import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/domain/entities/cell.dart';
 import 'package:flutter_minesweeper/core/feature_flags.dart';
+import 'package:flutter_minesweeper/core/constants.dart';
 import 'package:flutter_minesweeper/data/repositories/game_repository_impl.dart';
+
+GameState makeGameState({required List<List<Cell>> board, int mines = 1, int flagged = 0, int revealed = 0, String status = GameConstants.gameStatePlaying, String difficulty = 'test'}) {
+  return GameState(
+    board: board,
+    gameStatus: status,
+    minesCount: mines,
+    flaggedCount: flagged,
+    revealedCount: revealed,
+    totalCells: board.length * board[0].length,
+    startTime: DateTime.now(),
+    endTime: null,
+    difficulty: difficulty,
+  );
+}
+
+Cell unrevealed({bool flagged = false, bool hasBomb = false, int row = 0, int col = 0}) => Cell(
+  hasBomb: hasBomb,
+  bombsAround: 0,
+  state: flagged ? CellState.flagged : CellState.unrevealed,
+  row: row,
+  col: col,
+);
+
+Cell revealed({int bombs = 0, int row = 0, int col = 0}) => Cell(
+  hasBomb: false,
+  bombsAround: bombs,
+  state: CellState.revealed,
+  row: row,
+  col: col,
+);
 
 void main() {
   group('50/50 Detection Tests', () {
@@ -278,12 +309,6 @@ void main() {
       });
     });
 
-
-
-
-
-
-
     group('50/50 Situation Object', () {
       test('should create 50/50 situation with correct properties', () {
         const situation = FiftyFiftySituation(
@@ -449,8 +474,6 @@ void main() {
       });
     });
 
-
-
     group('Performance Tests', () {
       test('should handle large boards efficiently', () {
         // Create a large board (16x16)
@@ -479,8 +502,6 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(100)); // Should complete quickly
       });
     });
-
-
 
     group('Scenario 1: Classic Blocked 50/50', () {
       test('should detect 50/50 when two cells are blocked by walls/flags', () {
@@ -898,7 +919,5 @@ void main() {
         expect(first5050 || second5050, isTrue, reason: '50/50 should be one of the two valid scenarios');
       });
     });
-
-
   });
 } 

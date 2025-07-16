@@ -92,7 +92,7 @@ lib/
 ### Key Features
 - **Clean Architecture** - Separation of concerns with clear layers
 - **Feature Flags** - Easy toggling of experimental features
-- **Comprehensive Testing** - 126+ tests covering all game logic
+- **Comprehensive Testing** - 237+ tests covering all game logic, integration scenarios, and performance validation
 - **Configuration Validation** - Compile-time validation of game modes
 - **Null Safety** - Full Dart null safety compliance
 - **App Lifecycle Management** - Timer and state management for background/foreground transitions
@@ -131,5 +131,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **50/50 Situation Detection** - Detects classic and shared constraint 50/50 scenarios, with scenario-based tests for each known pattern
 - **Flag Toggle Logic** - Long-press toggles flags on unrevealed cells, matching classic Minesweeper behavior
-- **Test Coverage** - 126+ tests covering all core game logic, edge cases, and advanced scenarios
+- **Test Coverage** - 237+ tests covering all core game logic, edge cases, integration scenarios, and performance validation
 - **Smart Timer System** - Battery-efficient timer with app lifecycle awareness
