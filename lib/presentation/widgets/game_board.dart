@@ -36,26 +36,20 @@ class _GameBoardState extends State<GameBoard> {
         return Column(
           children: [
             // Game header with stats
-            Container(
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
-                  child: _buildGameHeader(context, gameProvider),
-                ),
+            Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+                child: _buildGameHeader(context, gameProvider),
               ),
             ),
             
             // Game board with zoom - constrained to available space
             Expanded(
-              child: Container(
-                child: _buildBoardWithZoom(context, gameProvider, gameState),
-              ),
+              child: _buildBoardWithZoom(context, gameProvider, gameState),
             ),
             
             // Zoom controls - directly above bottom bar
-            Container(
-              child: _buildZoomControls(context),
-            ),
+            _buildZoomControls(context),
           ],
         );
       },
@@ -149,7 +143,18 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    final cellSize = _baseCellSize * _zoomLevel;
+    // Calculate base cell size based on difficulty (fewer cells = larger cells)
+    final totalCells = gameState.rows * gameState.columns;
+    double baseCellSize;
+    if (totalCells <= 64) { // Easy: 8x8 or smaller
+      baseCellSize = 45.0;
+    } else if (totalCells <= 144) { // Medium: 12x12 or smaller
+      baseCellSize = 35.0;
+    } else { // Hard: 16x16 or larger
+      baseCellSize = 28.0;
+    }
+    
+    final cellSize = baseCellSize * _zoomLevel;
     final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
     
     return GestureDetector(
