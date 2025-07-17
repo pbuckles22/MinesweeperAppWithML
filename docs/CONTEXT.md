@@ -40,4 +40,10 @@ This project is a modernized Flutter Minesweeper game, with a focus on robust ga
 ## Workflow
 - All tasks, bugs, and improvements are tracked in `TODO.md`.
 - As you work, update `TODO.md` to reflect progress, add new tasks, and mark completed items.
-- Use this CONTEXT.md to quickly onboard new contributors or recall project state between sessions. 
+- Use this CONTEXT.md to quickly onboard new contributors or recall project state between sessions.
+
+# Integration Test Status
+
+- Settings Page: All integration tests pass, using direct provider calls for robust state changes.
+- Main App: Integration tests for launch, navigation, and provider initialization all pass.
+- Next: End-to-End Game Flow integration tests. 

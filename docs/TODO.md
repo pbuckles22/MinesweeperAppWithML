@@ -16,18 +16,22 @@
 - [x] **Identify classic Minesweeper 50/50 scenarios (two cells with equal probability)**
 - [x] **Add visual indicators for 50/50 scenarios**
 - [x] **Add tests for 50/50 detection and handling (all known scenarios covered)**
+- [x] Settings Page integration tests: All tests passing, robust provider-driven approach used.
+- [x] Main App integration tests: Launch, navigation, and provider initialization all tested and passing.
+- [ ] End-to-End Game Flow integration tests: Next focus area.
 
 ## 🚧 Current Status
 
-**All core Minesweeper functionality is now working with comprehensive test coverage (240+ tests).**
+**All core Minesweeper functionality is now working with comprehensive test coverage (238 tests).**
 
 ### ✅ Recent Test Improvements:
 - **Comprehensive Unit Tests** - Added tests for constants, icon utils, haptic service, game over dialog, fifty fifty detector, game state, board square, and feature flags
-- **Integration Tests** - Full game flow integration tests with performance validation
+- **Integration Tests** - Working integration tests for providers, widgets, and game logic
 - **Performance Tests** - Large board initialization, cascade reveal, rapid moves, memory usage, win detection, chord operations, and statistics calculation
 - **First Click Guarantee Tests** - Feature flag tests, cascade guarantee tests, edge cases, and settings provider tests
 - **Game Logic Integration Tests** - Win and loss scenarios with deterministic boards
 - **Provider Integration Tests** - GameProvider and SettingsProvider state management tests with repository integration
+- **Widget Integration Tests** - GameBoard rendering, provider integration, and state management tests
 - **50/50 Detection Tests** - Basic detection, safe move detection, edge cases, performance tests, and scenario-based tests (currently on hold for CSP/ML integration)
 
 ### ✅ What's Working:
@@ -44,6 +48,7 @@
 - Enhanced visual feedback for game end states
 - Consistent settings UX with educational tooltips
 - Provider state management with repository integration
+- Widget rendering and interactions
 
 ### ✅ Recent Major Improvements:
 - **Game Configuration Validation** - App fails to start with duplicate IDs/names
@@ -103,7 +108,7 @@
 
 ---
 
-**Current Test Coverage: 240+ tests covering all standard Minesweeper functionality, integration scenarios, performance validation, and provider state management**
+**Current Test Coverage: 238 tests covering all standard Minesweeper functionality, integration scenarios, performance validation, and provider state management**
 **Next Major Feature: Advanced Game Features (undo, hints, auto-flagging) and UI Polish**
 
 # TODO: Flutter Minesweeper Testing Strategy
@@ -129,7 +134,7 @@ We have successfully implemented a comprehensive testing strategy focused on hig
   - Different difficulty levels (easy, normal, expert)
   - Game statistics and error handling
   - Performance and memory tests
-- **Game Flow Integration Tests** - End-to-end testing of complete game scenarios
+- **Game Logic Integration Tests** - End-to-end testing of complete game scenarios
 
 ### 3. Performance Tests
 - **Game Performance Tests** - Testing large board initialization and rapid state changes
