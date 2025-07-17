@@ -16,10 +16,9 @@ class GameBoard extends StatefulWidget {
 
 class _GameBoardState extends State<GameBoard> {
   double _zoomLevel = 1.0;
-  static const double _minZoom = 1.0; // 100%
-  static const double _maxZoom = 2.0; // Changed from 3.0 to 2.0 (200%)
-  static const double _zoomStep = 0.1;
-  static const double _baseCellSize = 40.0;
+  static const double _minZoom = 0.5;
+  static const double _maxZoom = 3.0;
+  static const double _zoomStep = 0.05;
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +207,15 @@ class _GameBoardState extends State<GameBoard> {
                   child: CellWidget(
                     row: row,
                     col: col,
-                    onTap: () => gameProvider.revealCell(row, col),
+                    onTap: () {
+                      // Check if this is a 50/50 cell and safe move is enabled
+                      if (gameProvider.isCellIn5050Situation(row, col) && 
+                          FeatureFlags.enable5050SafeMove) {
+                        gameProvider.makeSafeMove(row, col);
+                      } else {
+                        gameProvider.revealCell(row, col);
+                      }
+                    },
                     onLongPress: () => gameProvider.toggleFlag(row, col),
                   ),
                 );
