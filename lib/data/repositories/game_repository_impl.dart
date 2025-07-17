@@ -303,10 +303,125 @@ class GameRepositoryImpl implements GameRepository {
   @override
   Future<GameState> resetGame() async {
     if (_currentState == null) {
-      throw StateError('Game not initialized');
+      throw StateError('No game to reset');
     }
     
     return await initializeGame(_currentState!.difficulty);
+  }
+
+  @override
+  Future<GameState> makeSafeMove(int clickedRow, int clickedCol, int otherRow, int otherCol) async {
+    if (_currentState == null || _currentState!.isGameOver) {
+      return _currentState!; // No action if game is over
+    }
+    
+    if (!_currentState!.isValidPosition(clickedRow, clickedCol) || 
+        !_currentState!.isValidPosition(otherRow, otherCol)) {
+      throw RangeError('Invalid position');
+    }
+    
+    final clickedCell = _currentState!.getCell(clickedRow, clickedCol);
+    final otherCell = _currentState!.getCell(otherRow, otherCol);
+    
+    if (clickedCell.isRevealed || clickedCell.isFlagged) {
+      return _currentState!; // No action needed
+    }
+    
+    // Create a copy of the board to modify
+    final newBoard = _copyBoard(_currentState!.board);
+    
+    // Check if the clicked cell has a mine
+    final clickedCellNew = newBoard[clickedRow][clickedCol];
+    final otherCellNew = newBoard[otherRow][otherCol];
+    
+    if (clickedCellNew.hasBomb) {
+      // Move the mine from clicked cell to the other cell
+      newBoard[clickedRow][clickedCol] = clickedCellNew.copyWith(hasBomb: false);
+      newBoard[otherRow][otherCol] = otherCellNew.copyWith(hasBomb: true);
+      
+      // Update bomb counts for affected cells
+      _updateBombCountsAfterMineMove(newBoard);
+    }
+    
+    // Now reveal the clicked cell (which is guaranteed to be safe)
+    final updatedClickedCell = newBoard[clickedRow][clickedCol];
+    final revealedCell = updatedClickedCell.copyWith(
+      state: updatedClickedCell.hasBomb ? CellState.exploded : CellState.revealed
+    );
+    newBoard[clickedRow][clickedCol] = revealedCell;
+    
+    // Cascade reveal if the cell is empty
+    if (!revealedCell.hasBomb && revealedCell.bombsAround == 0) {
+      _cascadeReveal(newBoard, clickedRow, clickedCol);
+    }
+    
+    // Additional cascade reveal for any cells that should be revealed after mine movement
+    // This handles cases where mine movement creates new empty areas
+    _cascadeRevealAfterMineMove(newBoard);
+    
+    // Count revealed and flagged cells
+    final counts = _countCells(newBoard);
+    
+    // Check for win
+    final isWon = counts['revealed'] == (_currentState!.totalCells - _currentState!.minesCount);
+    
+    // If game is won, flag all unflagged mines
+    if (isWon) {
+      _flagAllUnflaggedMines(newBoard);
+    }
+    
+    _currentState = _currentState!.copyWith(
+      board: newBoard,
+      gameStatus: isWon ? GameConstants.gameStateWon : GameConstants.gameStatePlaying,
+      revealedCount: counts['revealed'],
+      flaggedCount: counts['flagged'],
+      endTime: isWon ? DateTime.now() : null,
+    );
+    
+    return _currentState!;
+  }
+
+  /// Efficiently updates bomb counts after mine relocation
+  /// Only recalculates counts for cells affected by the mine move
+  void _updateBombCountsAfterMineMove(List<List<Cell>> board) {
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    // After mine movement, we need to recalculate ALL bomb counts
+    // because the mine positions have changed
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        if (!board[r][c].hasBomb) {
+          final actualBombsAround = _countBombsAround(board, r, c);
+          board[r][c] = board[r][c].copyWith(bombsAround: actualBombsAround);
+        }
+      }
+    }
+  }
+
+  /// Count bombs around a specific cell
+  int _countBombsAround(List<List<Cell>> board, int row, int col) {
+    int count = 0;
+    final rows = board.length;
+    final cols = board[0].length;
+    
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue; // Skip self
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        // Check bounds
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+        
+        if (board[nr][nc].hasBomb) {
+          count++;
+        }
+      }
+    }
+    
+    return count;
   }
 
   // TEST ONLY: Set a custom game state for deterministic tests
@@ -745,56 +860,44 @@ class GameRepositoryImpl implements GameRepository {
     }
   }
 
-  /// Efficiently updates bomb counts after mine relocation
-  /// Only recalculates counts for cells affected by the mine move
-  void _updateBombCountsAfterMineMove(List<List<Cell>> board) {
+  void _cascadeRevealAfterMineMove(List<List<Cell>> board) {
     final rows = board.length;
     final cols = board[0].length;
+    final queue = <List<int>>[];
+    final visited = List.generate(rows, (_) => List.generate(cols, (_) => false));
     
-    // Since we don't track mine movements directly, we need to detect changes
-    // by comparing current bomb counts with actual bombs around each cell
-    final cellsToUpdate = <List<int>>[];
-    
+    // Find all cells that should be revealed after mine movement
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
-        final cell = board[r][c];
-        final actualBombsAround = _countBombsAround(board, r, c);
-        if (cell.bombsAround != actualBombsAround) {
-          cellsToUpdate.add([r, c]);
+        if (!board[r][c].hasBomb && board[r][c].bombsAround == 0) {
+          queue.add([r, c]);
         }
       }
     }
     
-    // Update bomb counts for affected cells
-    for (final pos in cellsToUpdate) {
+    while (queue.isNotEmpty) {
+      final pos = queue.removeAt(0);
       final r = pos[0], c = pos[1];
-      final actualBombsAround = _countBombsAround(board, r, c);
-      board[r][c] = board[r][c].copyWith(bombsAround: actualBombsAround);
-    }
-  }
-
-  /// Count bombs around a specific cell
-  int _countBombsAround(List<List<Cell>> board, int row, int col) {
-    int count = 0;
-    final rows = board.length;
-    final cols = board[0].length;
-    
-    for (int dr = -1; dr <= 1; dr++) {
-      for (int dc = -1; dc <= 1; dc++) {
-        if (dr == 0 && dc == 0) continue; // Skip self
-        
-        final nr = row + dr;
-        final nc = col + dc;
-        
-        // Check bounds
-        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
-        
-        if (board[nr][nc].hasBomb) {
-          count++;
+      final cell = board[r][c];
+      
+      if (visited[r][c] || cell.isRevealed || cell.isFlagged) continue;
+      
+      visited[r][c] = true;
+      cell.reveal();
+      
+      if (!cell.hasBomb && cell.bombsAround == 0) {
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            final nr = r + dr;
+            final nc = c + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+              if (!visited[nr][nc] && !board[nr][nc].hasBomb && board[nr][nc].bombsAround == 0) {
+                queue.add([nr, nc]);
+              }
+            }
+          }
         }
       }
     }
-    
-    return count;
   }
 } 
