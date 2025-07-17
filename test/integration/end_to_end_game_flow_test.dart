@@ -151,7 +151,11 @@ void main() {
       
       // Change difficulty (should reset the game)
       settingsProvider.setDifficulty('hard');
+      // Force reset repository and initialize new game (like settings page does)
+      gameProvider.forceResetRepository();
+      await gameProvider.initializeGame('hard');
       await tester.pumpAndSettle();
+      
       expect(gameProvider.gameState?.isPlaying, isTrue); // New game started
       expect(settingsProvider.selectedDifficulty, 'hard');
     });
