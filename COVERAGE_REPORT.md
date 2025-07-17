@@ -4,6 +4,7 @@
 - **Overall Coverage**: 23.9% (367 of 1538 lines)
 - **Source Files**: 16 files covered
 - **Test Files**: 10 test files (excluding problematic ones)
+- **Total Tests**: 260 tests passing, 34 tests skipped
 
 ## Coverage by File
 
@@ -45,6 +46,7 @@
 - `first_click_guarantee_test.dart` (8 tests)
 - `game_over_dialog_test.dart` (2 tests)
 - `zoom_widget_test.dart` (2 tests)
+- `integration/` - Complete integration test suite (Settings Page, Main App, End-to-End Game Flow)
 
 ❌ **Problematic test files** (cause segfaults with coverage):
 - `dynamic_config_test.dart`
@@ -82,5 +84,5 @@
 ## Notes
 - Coverage tool has known issues with certain test files causing segmentation faults
 - Workaround: Run coverage on individual test files or use the safe coverage script
-- All normal tests pass consistently (181 tests)
+- All normal tests pass consistently (260 tests)
 - Focus on improving coverage for core business logic first 

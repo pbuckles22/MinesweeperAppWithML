@@ -92,7 +92,7 @@ lib/
 ### Key Features
 - **Clean Architecture** - Separation of concerns with clear layers
 - **Feature Flags** - Easy toggling of experimental features
-- **Comprehensive Testing** - 237+ tests covering all game logic, integration scenarios, and performance validation
+- **Comprehensive Testing** - 260tests covering all game logic, integration scenarios, and performance validation
 - **Configuration Validation** - Compile-time validation of game modes
 - **Null Safety** - Full Dart null safety compliance
 - **App Lifecycle Management** - Timer and state management for background/foreground transitions
