@@ -6,7 +6,9 @@ import '../../core/game_mode_config.dart';
 import '../../core/icon_utils.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({Key? key}) : super(key: key);
+  final bool closeOnChange;
+  
+  const SettingsPage({Key? key, this.closeOnChange = true}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +108,7 @@ class SettingsPage extends StatelessWidget {
                             child: Icon(
                               Icons.help_outline,
                               size: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -117,7 +119,7 @@ class SettingsPage extends StatelessWidget {
                             ? 'First click always reveals a cascade'
                             : 'Classic Minesweeper rules',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -167,7 +169,7 @@ class SettingsPage extends StatelessWidget {
                             child: Icon(
                               Icons.help_outline,
                               size: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -176,7 +178,7 @@ class SettingsPage extends StatelessWidget {
                       Text(
                         'Highlight unsolvable situations',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -226,7 +228,7 @@ class SettingsPage extends StatelessWidget {
                             child: Icon(
                               Icons.help_outline,
                               size: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -235,7 +237,7 @@ class SettingsPage extends StatelessWidget {
                       Text(
                         'Auto-resolve 50/50 situations',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -263,7 +265,7 @@ class SettingsPage extends StatelessWidget {
 
     return Card(
       elevation: 1,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -363,13 +365,13 @@ class SettingsPage extends StatelessWidget {
       gameProvider.initializeGame(settingsProvider.selectedDifficulty);
     }
     // Close settings page to make behavior consistent with difficulty changes
-    Navigator.of(context).pop();
+    if (closeOnChange) Navigator.of(context).pop();
   }
 
   Widget _buildModeDescription(BuildContext context, SettingsProvider settingsProvider) {
     return Card(
       elevation: 1,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -567,7 +569,7 @@ class SettingsPage extends StatelessWidget {
     // Start new game with new difficulty
     gameProvider.initializeGame(newDifficulty);
     // Close settings page
-    Navigator.of(context).pop();
+    if (closeOnChange) Navigator.of(context).pop();
   }
 
   Widget _buildResetButton(BuildContext context, SettingsProvider settingsProvider) {

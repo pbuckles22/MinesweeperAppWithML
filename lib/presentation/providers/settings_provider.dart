@@ -25,6 +25,7 @@ class SettingsProvider extends ChangeNotifier {
   // Initialize settings
   SettingsProvider() {
     _loadSettings();
+    notifyListeners(); // Ensure listeners are notified after loading settings
   }
 
   // Toggle first click guarantee (Classic vs Kickstarter mode)
