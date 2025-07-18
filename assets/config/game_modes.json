@@ -48,11 +48,12 @@
       "icon": "settings"
     }
   ],
-  "default_mode": "easy",
-  "custom_settings": {
-    "default_rows": 18,
-    "default_columns": 10,
-    "default_bomb_probability": 3,
-    "max_probability": 15
+  "defaults": {
+    "game_mode": "hard",
+    "features": {
+      "kickstarter_mode": true,
+      "5050_detection": true,
+      "5050_safe_move": true
+    }
   }
 } 

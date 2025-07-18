@@ -1,7 +1,8 @@
 /// Feature flags for controlling which features are enabled in the app
+/// These are initialized from JSON configuration and can be updated at runtime
 class FeatureFlags {
   // Core game features
-  static bool enableFirstClickGuarantee = true; // First click always reveals a cascade
+  static bool enableFirstClickGuarantee = false; // Set from JSON in main.dart
   static bool enableGameStatistics = true; // Game statistics and timer
   static bool enableBoardReset = false; // Board reset functionality
   static bool enableCustomDifficulty = false; // Custom difficulty settings
@@ -11,8 +12,8 @@ class FeatureFlags {
   static bool enableHintSystem = false; // Hint system
   static bool enableAutoFlag = false; // Auto-flagging
   static bool enableBestTimes = false; // Best times tracking
-  static bool enable5050Detection = false; // 50/50 situation detection
-  static bool enable5050SafeMove = false; // Safe move option for 50/50 scenarios
+  static bool enable5050Detection = false; // Set from JSON in main.dart
+  static bool enable5050SafeMove = false; // Set from JSON in main.dart
   
   // UI/UX features
   static bool enableDarkMode = false; // Dark mode

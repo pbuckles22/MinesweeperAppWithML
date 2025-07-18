@@ -1,11 +1,12 @@
 import 'game_mode_config.dart';
 
 class GameConstants {
-  // Board dimensions
+  // Board dimensions - now dynamically loaded from GameModeConfig
+  // These are kept for backward compatibility but should not be used
   static const int defaultRowCount = 18;
   static const int defaultColumnCount = 10;
   
-  // Bomb generation
+  // Bomb generation - these are used for custom difficulty calculations
   static const int defaultBombProbability = 3;
   static const int defaultMaxProbability = 15;
   

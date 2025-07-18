@@ -142,16 +142,8 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    // Calculate base cell size based on difficulty (fewer cells = larger cells)
-    final totalCells = gameState.rows * gameState.columns;
-    double baseCellSize;
-    if (totalCells <= 64) { // Easy: 8x8 or smaller
-      baseCellSize = 45.0;
-    } else if (totalCells <= 144) { // Medium: 12x12 or smaller
-      baseCellSize = 35.0;
-    } else { // Hard: 16x16 or larger
-      baseCellSize = 28.0;
-    }
+    // Use consistent cell size across all difficulties
+    const double baseCellSize = 40.0; // Standard cell size for all difficulties
     
     final cellSize = baseCellSize * _zoomLevel;
     final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
@@ -209,10 +201,19 @@ class _GameBoardState extends State<GameBoard> {
                     col: col,
                     onTap: () {
                       // Check if this is a 50/50 cell and safe move is enabled
-                      if (gameProvider.isCellIn5050Situation(row, col) && 
-                          FeatureFlags.enable5050SafeMove) {
-                        gameProvider.makeSafeMove(row, col);
+                      final is5050Cell = gameProvider.isCellIn5050Situation(row, col);
+                      final is5050SafeMoveEnabled = FeatureFlags.enable5050SafeMove;
+                      
+                      // print('DEBUG: GameBoard onTap - Cell ($row,$col):');
+                      // print('DEBUG:   isCellIn5050Situation: $is5050Cell');
+                      // print('DEBUG:   enable5050SafeMove: $is5050SafeMoveEnabled');
+                      // print('DEBUG:   FeatureFlags.enable5050Detection: ${FeatureFlags.enable5050Detection}');
+                      
+                      if (is5050Cell && is5050SafeMoveEnabled) {
+                        // print('DEBUG: GameBoard onTap - Executing 50/50 safe move');
+                        gameProvider.execute5050SafeMove(row, col);
                       } else {
+                        // print('DEBUG: GameBoard onTap - Executing normal reveal');
                         gameProvider.revealCell(row, col);
                       }
                     },

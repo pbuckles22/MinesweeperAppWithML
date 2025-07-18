@@ -37,16 +37,16 @@ class CellWidget extends StatelessWidget {
             }
           },
           onLongPress: () {
-            print('DEBUG: Long press detected on cell ($row, $col)');
-            print('DEBUG: Cell state: ${cell.state}');
-            print('DEBUG: isPlaying: ${gameProvider.isPlaying}');
-            print('DEBUG: isValidAction: ${gameProvider.isValidAction(row, col)}');
+            // print('DEBUG: Long press detected on cell ($row, $col)');
+            // print('DEBUG: Cell state: ${cell.state}');
+            // print('DEBUG: isPlaying: ${gameProvider.isPlaying}');
+            // print('DEBUG: isValidAction: ${gameProvider.isValidAction(row, col)}');
             if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
-              print('DEBUG: Executing long press action');
+              // print('DEBUG: Executing long press action');
               HapticService.mediumImpact();
               onLongPress();
             } else {
-              print('DEBUG: Long press blocked - game not playing or invalid action');
+              // print('DEBUG: Long press blocked - game not playing or invalid action');
             }
           },
           child: Container(

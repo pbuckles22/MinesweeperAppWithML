@@ -94,17 +94,26 @@ class SettingsProvider extends ChangeNotifier {
   // Load settings from storage (placeholder for now)
   void _loadSettings() {
     // TODO: Implement persistent storage
-    // For now, use default values
-    _isFirstClickGuaranteeEnabled = false;
-    _isClassicMode = true;
-    _is5050DetectionEnabled = false;
-    _is5050SafeMoveEnabled = false;
-    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'easy';
+    // For now, read defaults from GameModeConfig (single source of truth)
+    _isFirstClickGuaranteeEnabled = GameModeConfig.instance.defaultKickstarterMode;
+    _isClassicMode = !GameModeConfig.instance.defaultKickstarterMode;
+    _is5050DetectionEnabled = GameModeConfig.instance.default5050Detection;
+    _is5050SafeMoveEnabled = GameModeConfig.instance.default5050SafeMove;
+    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'hard';
     
-    // Update feature flags
-    FeatureFlags.enableFirstClickGuarantee = _isFirstClickGuaranteeEnabled;
-    FeatureFlags.enable5050Detection = _is5050DetectionEnabled;
-    FeatureFlags.enable5050SafeMove = _is5050SafeMoveEnabled;
+    // Note: FeatureFlags are already initialized in main.dart from JSON
+    // We don't need to set them again here
+    
+    // Debug logging
+    // print('DEBUG: SettingsProvider._loadSettings - Loaded settings from JSON:');
+    // print('DEBUG:   Kickstarter mode: $_isFirstClickGuaranteeEnabled');
+    // print('DEBUG:   50/50 detection: $_is5050DetectionEnabled');
+    // print('DEBUG:   50/50 safe move: $_is5050SafeMoveEnabled');
+    // print('DEBUG:   Difficulty: $_selectedDifficulty');
+    // print('DEBUG:   FeatureFlags (already set in main.dart):');
+    // print('DEBUG:     enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
+    // print('DEBUG:     enable5050Detection: ${FeatureFlags.enable5050Detection}');
+    // print('DEBUG:     enable5050SafeMove: ${FeatureFlags.enable5050SafeMove}');
   }
 
   // Save settings to storage (placeholder for now)
@@ -115,13 +124,14 @@ class SettingsProvider extends ChangeNotifier {
 
   // Reset to defaults
   void resetToDefaults() {
-    _isFirstClickGuaranteeEnabled = false;
-    _isClassicMode = true;
-    _is5050DetectionEnabled = false;
-    _is5050SafeMoveEnabled = false;
-    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'easy';
+    // Read defaults from GameModeConfig (single source of truth)
+    _isFirstClickGuaranteeEnabled = GameModeConfig.instance.defaultKickstarterMode;
+    _isClassicMode = !GameModeConfig.instance.defaultKickstarterMode;
+    _is5050DetectionEnabled = GameModeConfig.instance.default5050Detection;
+    _is5050SafeMoveEnabled = GameModeConfig.instance.default5050SafeMove;
+    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'hard';
     
-    // Update feature flags
+    // Update feature flags (this is needed for reset functionality)
     FeatureFlags.enableFirstClickGuarantee = _isFirstClickGuaranteeEnabled;
     FeatureFlags.enable5050Detection = _is5050DetectionEnabled;
     FeatureFlags.enable5050SafeMove = _is5050SafeMoveEnabled;

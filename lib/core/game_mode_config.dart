@@ -54,36 +54,17 @@ class GameMode {
   }
 }
 
-class CustomSettings {
-  final int defaultRows;
-  final int defaultColumns;
-  final int defaultBombProbability;
-  final int maxProbability;
-
-  CustomSettings({
-    required this.defaultRows,
-    required this.defaultColumns,
-    required this.defaultBombProbability,
-    required this.maxProbability,
-  });
-
-  factory CustomSettings.fromJson(Map<String, dynamic> json) {
-    return CustomSettings(
-      defaultRows: json['default_rows'] as int,
-      defaultColumns: json['default_columns'] as int,
-      defaultBombProbability: json['default_bomb_probability'] as int,
-      maxProbability: json['max_probability'] as int,
-    );
-  }
-}
-
 class GameModeConfig {
   static final GameModeConfig instance = GameModeConfig._();
 
   static List<GameMode> _gameModes = [];
   static String _defaultMode = 'easy';
-  static CustomSettings? _customSettings;
   static bool _isLoaded = false;
+  
+  // Feature defaults
+  static bool _defaultKickstarterMode = false;
+  static bool _default5050Detection = false;
+  static bool _default5050SafeMove = false;
 
   GameModeConfig._() {
     // Validate configuration immediately when instance is created
@@ -144,10 +125,20 @@ class GameModeConfig {
       // print('GameModeConfig: Parsed game_modes:');
       // print(_gameModes);
       
-      _defaultMode = json['default_mode'] as String;
-      
-      if (json.containsKey('custom_settings')) {
-        _customSettings = CustomSettings.fromJson(json['custom_settings']);
+      // Read defaults from new structure
+      if (json.containsKey('defaults')) {
+        final defaults = json['defaults'] as Map<String, dynamic>;
+        _defaultMode = defaults['game_mode'] as String;
+        
+        if (defaults.containsKey('features')) {
+          final features = defaults['features'] as Map<String, dynamic>;
+          _defaultKickstarterMode = features['kickstarter_mode'] as bool? ?? false;
+          _default5050Detection = features['5050_detection'] as bool? ?? false;
+          _default5050SafeMove = features['5050_safe_move'] as bool? ?? false;
+        }
+      } else {
+        // Fallback to old structure
+        _defaultMode = json['default_mode'] as String? ?? 'easy';
       }
       
       _isLoaded = true;
@@ -219,13 +210,13 @@ class GameModeConfig {
         icon: 'settings',
       ),
     ];
-    _defaultMode = 'easy';
-    _customSettings = CustomSettings(
-      defaultRows: 18,
-      defaultColumns: 10,
-      defaultBombProbability: 3,
-      maxProbability: 15,
-    );
+    _defaultMode = 'hard';
+    
+    // Use safe fallback values for features (false = disabled)
+    // This ensures the app doesn't crash if JSON is invalid
+    _defaultKickstarterMode = false;
+    _default5050Detection = false;
+    _default5050SafeMove = false;
   }
 
   /// Get all enabled game modes
@@ -248,8 +239,10 @@ class GameModeConfig {
   /// Get the default game mode
   GameMode? get defaultGameMode => getGameMode(_defaultMode);
 
-  /// Get custom settings
-  CustomSettings? get customSettings => _customSettings;
+  /// Get feature defaults
+  bool get defaultKickstarterMode => _defaultKickstarterMode;
+  bool get default5050Detection => _default5050Detection;
+  bool get default5050SafeMove => _default5050SafeMove;
 
   /// Check if a game mode exists
   bool hasGameMode(String id) => getGameMode(id) != null;
@@ -265,7 +258,6 @@ class GameModeConfig {
     _isLoaded = false;
     _gameModes = [];
     _defaultMode = 'easy';
-    _customSettings = null;
     await loadGameModes();
   }
 
