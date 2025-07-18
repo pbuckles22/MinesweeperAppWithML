@@ -78,13 +78,14 @@ void main() {
               "enabled": false
             }
           ],
-          "default_mode": "easy",
-          "custom_settings": {
-            "default_rows": 18,
-            "default_columns": 10,
-            "default_bomb_probability": 3,
-            "max_probability": 15
+          "defaults": {
+          "game_mode": "easy",
+          "features": {
+            "kickstarter_mode": false,
+            "5050_detection": false,
+            "5050_safe_move": false
           }
+                }
         }
         ''';
 

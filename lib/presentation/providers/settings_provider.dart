@@ -93,12 +93,12 @@ class SettingsProvider extends ChangeNotifier {
   // Load settings from storage (placeholder for now)
   void _loadSettings() {
     // TODO: Implement persistent storage
-    // For now, use default values
-    _isFirstClickGuaranteeEnabled = false;
-    _isClassicMode = true;
-    _is5050DetectionEnabled = false;
-    _is5050SafeMoveEnabled = false;
-    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'easy';
+    // For now, read defaults from GameModeConfig (single source of truth)
+    _isFirstClickGuaranteeEnabled = GameModeConfig.instance.defaultKickstarterMode;
+    _isClassicMode = !GameModeConfig.instance.defaultKickstarterMode;
+    _is5050DetectionEnabled = GameModeConfig.instance.default5050Detection;
+    _is5050SafeMoveEnabled = GameModeConfig.instance.default5050SafeMove;
+    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'hard';
     
     // Update feature flags
     FeatureFlags.enableFirstClickGuarantee = _isFirstClickGuaranteeEnabled;
@@ -114,11 +114,12 @@ class SettingsProvider extends ChangeNotifier {
 
   // Reset to defaults
   void resetToDefaults() {
-    _isFirstClickGuaranteeEnabled = false;
-    _isClassicMode = true;
-    _is5050DetectionEnabled = false;
-    _is5050SafeMoveEnabled = false;
-    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'easy';
+    // Read defaults from GameModeConfig (single source of truth)
+    _isFirstClickGuaranteeEnabled = GameModeConfig.instance.defaultKickstarterMode;
+    _isClassicMode = !GameModeConfig.instance.defaultKickstarterMode;
+    _is5050DetectionEnabled = GameModeConfig.instance.default5050Detection;
+    _is5050SafeMoveEnabled = GameModeConfig.instance.default5050SafeMove;
+    _selectedDifficulty = GameModeConfig.instance.defaultGameMode?.id ?? 'hard';
     
     // Update feature flags
     FeatureFlags.enableFirstClickGuarantee = _isFirstClickGuaranteeEnabled;

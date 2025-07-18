@@ -68,18 +68,61 @@ class FiftyFiftyDetector {
         // Check for classic 50/50 pattern (Scenario 1)
         final classic5050 = _checkForClassic5050(gameState, row, col, definitelyMineCells);
         if (classic5050 != null) {
+          print('DEBUG: detect5050Situations - Found classic 50/50: $classic5050');
           return [classic5050]; // Return immediately - only one 50/50 at a time
         }
 
         // Check for shared constraint 50/50 pattern (Scenario 2)
         final shared5050 = _checkForSharedConstraint5050(gameState, row, col, definitelyMineCells);
         if (shared5050 != null) {
+          print('DEBUG: detect5050Situations - Found shared constraint 50/50: $shared5050');
           return [shared5050]; // Return immediately - only one 50/50 at a time
         }
       }
     }
 
+    print('DEBUG: detect5050Situations - No 50/50 situations found');
     return [];
+  }
+
+  /// Checks if a specific 50/50 situation is still valid in the current game state.
+  /// This is used to avoid unnecessary re-detection when the current 50/50 is still valid.
+  static bool is5050SituationStillValid(GameState gameState, FiftyFiftySituation situation) {
+    if (!FeatureFlags.enable5050Detection) {
+      return false;
+    }
+
+    // Check if both cells in the 50/50 are still unrevealed and unflagged
+    final cell1 = gameState.getCell(situation.row1, situation.col1);
+    final cell2 = gameState.getCell(situation.row2, situation.col2);
+    
+    if (cell1.isRevealed || cell1.isFlagged || cell2.isRevealed || cell2.isFlagged) {
+      print('DEBUG: is5050SituationStillValid - One of the cells is revealed or flagged, 50/50 no longer valid');
+      return false;
+    }
+
+    // Check if the trigger cell is still valid
+    final triggerCell = gameState.getCell(situation.triggerRow, situation.triggerCol);
+    if (!triggerCell.isRevealed || triggerCell.hasBomb || triggerCell.bombsAround != situation.number) {
+      print('DEBUG: is5050SituationStillValid - Trigger cell is no longer valid, 50/50 no longer valid');
+      return false;
+    }
+
+    // Check if the 50/50 logic still applies (this is a simplified check)
+    // For a more robust check, we'd need to re-run the detection logic
+    final definitelyMineCells = _findDefinitelyMineCells(gameState);
+    
+    // Check if either candidate cell is now definitely a mine or safe
+    if (definitelyMineCells.any((mine) => mine[0] == situation.row1 && mine[1] == situation.col1) ||
+        definitelyMineCells.any((mine) => mine[0] == situation.row2 && mine[1] == situation.col2) ||
+        definitelyMineCells.any((safe) => safe[0] == -situation.row1 - 1 && safe[1] == -situation.col1 - 1) ||
+        definitelyMineCells.any((safe) => safe[0] == -situation.row2 - 1 && safe[1] == -situation.col2 - 1)) {
+      print('DEBUG: is5050SituationStillValid - One of the cells is now definitely a mine or safe, 50/50 no longer valid');
+      return false;
+    }
+
+    print('DEBUG: is5050SituationStillValid - 50/50 situation is still valid');
+    return true;
   }
 
   /// Finds cells that are definitely mines (must be flagged).
@@ -117,13 +160,27 @@ class FiftyFiftyDetector {
         
         final remainingMines = cell.bombsAround - flaggedCount;
         
+        print('DEBUG: _findDefinitelyMineCells - Cell ($row,$col) number=${cell.bombsAround}, flaggedCount=$flaggedCount, unrevealedNeighbors=$unrevealedNeighbors, remainingMines=$remainingMines');
+        
         // If exactly one unrevealed neighbor and it needs exactly one mine, it's definitely a mine
         if (unrevealedNeighbors.length == 1 && remainingMines == 1) {
+          print('DEBUG: _findDefinitelyMineCells - Found definitely mine at ${unrevealedNeighbors.first}');
           mineCells.add(unrevealedNeighbors.first);
+        }
+        
+        // NEW: If all mines are already flagged (remainingMines = 0), then all unrevealed neighbors are safe
+        if (remainingMines == 0 && unrevealedNeighbors.isNotEmpty) {
+          print('DEBUG: _findDefinitelyMineCells - Cell ($row,$col) has all mines flagged, marking ${unrevealedNeighbors.length} neighbors as safe');
+          // Mark these cells as "definitely safe" by adding them to a special list
+          // We'll use a negative index to indicate "definitely safe" cells
+          for (final neighbor in unrevealedNeighbors) {
+            mineCells.add([-neighbor[0] - 1, -neighbor[1] - 1]); // Use negative indices to mark as safe
+          }
         }
       }
     }
     
+    print('DEBUG: _findDefinitelyMineCells - Found ${mineCells.length} definitely mine/safe cells: $mineCells');
     return mineCells;
   }
 
@@ -157,6 +214,8 @@ class FiftyFiftyDetector {
     // Classic 50/50: exactly 2 unrevealed cells and exactly 1 remaining mine
     final remainingMines = number - flaggedCount;
     
+    print('DEBUG: _checkForClassic5050 - Cell ($row,$col) number=$number, flaggedCount=$flaggedCount, unrevealedNeighbors=$unrevealedNeighbors, remainingMines=$remainingMines');
+    
     if (unrevealedNeighbors.length == 2 && remainingMines == 1) {
       final cell1 = unrevealedNeighbors[0];
       final cell2 = unrevealedNeighbors[1];
@@ -169,14 +228,23 @@ class FiftyFiftyDetector {
         return null;
       }
       
-      // Check if either candidate cell is definitely a mine
+      // Check if either candidate cell is definitely a mine or definitely safe
       if (definitelyMineCells.any((mine) => mine[0] == cell1[0] && mine[1] == cell1[1]) ||
-          definitelyMineCells.any((mine) => mine[0] == cell2[0] && mine[1] == cell2[1])) {
+          definitelyMineCells.any((mine) => mine[0] == cell2[0] && mine[1] == cell2[1]) ||
+          definitelyMineCells.any((safe) => safe[0] == -cell1[0] - 1 && safe[1] == -cell1[1] - 1) ||
+          definitelyMineCells.any((safe) => safe[0] == -cell2[0] - 1 && safe[1] == -cell2[1] - 1)) {
+        print('DEBUG: _checkForClassic5050 - One of the candidate cells is definitely a mine or safe, skipping');
         return null;
       }
       
-      // For classic 50/50, we don't need to check if cells are "blocked"
-      // Classic 50/50 is simply: exactly 2 unrevealed neighbors with exactly 1 remaining mine
+      // For classic 50/50, we need to verify this is truly a 50/50 situation
+      // Check if the cells are "blocked" - meaning no other revealed cells provide constraints
+      if (!_areCellsBlocked(gameState, cell1[0], cell1[1], cell2[0], cell2[1], row, col)) {
+        print('DEBUG: _checkForClassic5050 - Cells are not blocked (other revealed cells provide constraints), skipping');
+        return null;
+      }
+      
+      print('DEBUG: _checkForClassic5050 - Found valid classic 50/50: ($cell1) vs ($cell2)');
       return FiftyFiftySituation(
         row1: cell1[0],
         col1: cell1[1],
@@ -245,7 +313,7 @@ class FiftyFiftyDetector {
     }
     
     if (unrevealedNeighbors.isEmpty) return null;
-    print('DEBUG: Trigger cell ($row,$col) number=$number unrevealedNeighbors=$unrevealedNeighbors flaggedCount=$flaggedCount');
+    print('DEBUG: _checkForSharedConstraint5050 - Trigger cell ($row,$col) number=$number unrevealedNeighbors=$unrevealedNeighbors flaggedCount=$flaggedCount');
     
     for (int otherRow = 0; otherRow < gameState.rows; otherRow++) {
       for (int otherCol = 0; otherCol < gameState.columns; otherCol++) {
@@ -294,8 +362,10 @@ class FiftyFiftyDetector {
           final cell2State = gameState.getCell(cell2[0], cell2[1]);
           if (cell1State.isFlagged || cell2State.isFlagged) { print('DEBUG:     One of the candidate cells is flagged, skipping'); continue; }
           if (definitelyMineCells.any((mine) => mine[0] == cell1[0] && mine[1] == cell1[1]) ||
-              definitelyMineCells.any((mine) => mine[0] == cell2[0] && mine[1] == cell2[1])) {
-            print('DEBUG:     One of the candidate cells is definitely a mine, skipping');
+              definitelyMineCells.any((mine) => mine[0] == cell2[0] && mine[1] == cell2[1]) ||
+              definitelyMineCells.any((safe) => safe[0] == -cell1[0] - 1 && safe[1] == -cell1[1] - 1) ||
+              definitelyMineCells.any((safe) => safe[0] == -cell2[0] - 1 && safe[1] == -cell2[1] - 1)) {
+            print('DEBUG:     One of the candidate cells is definitely a mine or safe, skipping');
             continue;
           }
           if (!_areCellsBlockedShared(gameState, cell1[0], cell1[1], cell2[0], cell2[1], row, col, otherRow, otherCol)) {

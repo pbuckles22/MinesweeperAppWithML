@@ -31,4 +31,9 @@ abstract class GameRepository {
   
   /// Reset the game
   Future<GameState> resetGame();
+  
+  /// Make a safe move in a 50/50 situation, moving mines if necessary
+  /// [clickedRow, clickedCol] is the cell the user clicked
+  /// [otherRow, otherCol] is the other cell in the50situation
+  Future<GameState> perform5050SafeMove(int clickedRow, int clickedCol, int otherRow, int otherCol);
 } 

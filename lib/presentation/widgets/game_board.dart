@@ -148,7 +148,10 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    final cellSize = _baseCellSize * _zoomLevel;
+    // Use consistent cell size across all difficulties
+    const double baseCellSize = 40.0; // Standard cell size for all difficulties
+    
+    final cellSize = baseCellSize * _zoomLevel;
     final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
     
     return GestureDetector(
@@ -202,7 +205,15 @@ class _GameBoardState extends State<GameBoard> {
                   child: CellWidget(
                     row: row,
                     col: col,
-                    onTap: () => gameProvider.revealCell(row, col),
+                    onTap: () {
+                      // Check if this is a 50/50 cell and safe move is enabled
+                      if (gameProvider.isCellIn5050Situation(row, col) && 
+                          FeatureFlags.enable5050SafeMove) {
+                        gameProvider.execute5050SafeMove(row, col);
+                      } else {
+                        gameProvider.revealCell(row, col);
+                      }
+                    },
                     onLongPress: () => gameProvider.toggleFlag(row, col),
                   ),
                 );

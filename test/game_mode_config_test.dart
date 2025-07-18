@@ -55,7 +55,14 @@ void main() {
               "enabled": true
             }
           ],
-          "default_mode": "easy"
+          "defaults": {
+            "game_mode": "easy",
+            "features": {
+              "kickstarter_mode": false,
+              "5050_detection": false,
+              "5050_safe_move": false
+            }
+          }
         }
         ''';
 
@@ -91,7 +98,14 @@ void main() {
               "enabled": true
             }
           ],
-          "default_mode": "easy"
+          "defaults": {
+            "game_mode": "easy",
+            "features": {
+              "kickstarter_mode": false,
+              "5050_detection": false,
+              "5050_safe_move": false
+            }
+          }
         }
         ''';
 
@@ -182,16 +196,10 @@ void main() {
         expect(modes.first.id, 'minimal');
       });
 
-      test('should handle custom settings', () {
-        final customSettings = config.customSettings;
-        expect(customSettings, isNotNull);
-        
-        if (customSettings != null) {
-          expect(customSettings.defaultRows, greaterThan(0));
-          expect(customSettings.defaultColumns, greaterThan(0));
-          expect(customSettings.defaultBombProbability, greaterThan(0));
-          expect(customSettings.maxProbability, greaterThan(0));
-        }
+      test('should handle feature defaults', () {
+        expect(config.defaultKickstarterMode, isA<bool>());
+        expect(config.default5050Detection, isA<bool>());
+        expect(config.default5050SafeMove, isA<bool>());
       });
 
       test('should handle extreme values safely', () async {

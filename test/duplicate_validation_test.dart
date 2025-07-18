@@ -30,7 +30,14 @@ void main() {
             "icon": "sentiment_satisfied"
           }
         ],
-        "default_mode": "easy"
+        "defaults": {
+          "game_mode": "easy",
+          "features": {
+            "kickstarter_mode": false,
+            "5050_detection": false,
+            "5050_safe_move": false
+          }
+        }
       }
       ''';
 
@@ -82,7 +89,14 @@ void main() {
             "icon": "sentiment_satisfied"
           }
         ],
-        "default_mode": "easy"
+        "defaults": {
+          "game_mode": "easy",
+          "features": {
+            "kickstarter_mode": false,
+            "5050_detection": false,
+            "5050_safe_move": false
+          }
+        }
       }
       ''';
 
@@ -134,7 +148,14 @@ void main() {
             "icon": "sentiment_neutral"
           }
         ],
-        "default_mode": "easy"
+        "defaults": {
+          "game_mode": "easy",
+          "features": {
+            "kickstarter_mode": false,
+            "5050_detection": false,
+            "5050_safe_move": false
+          }
+        }
       }
       ''';
 

@@ -190,6 +190,20 @@ class GameProvider extends ChangeNotifier {
       return;
     }
 
+    // Check if current 50/50 situation is still valid
+    if (_current5050Situations.isNotEmpty) {
+      final currentSituation = _current5050Situations.first;
+      if (FiftyFiftyDetector.is5050SituationStillValid(_gameState!, currentSituation)) {
+        print('DEBUG: _update5050Detection - Current 50/50 is still valid, keeping it');
+        // Keep the current 50/50 situation, just re-mark the cells
+        _clear5050Markings();
+        _mark5050Cells();
+        return;
+      } else {
+        print('DEBUG: _update5050Detection - Current 50/50 is no longer valid, re-detecting');
+      }
+    }
+
     // Clear previous 50/50 markings
     _clear5050Markings();
     
@@ -249,14 +263,53 @@ class GameProvider extends ChangeNotifier {
   }
 
   // Safe move for 50/50 situations (if enabled)
-  Future<void> makeSafeMove(int row, int col) async {
+  Future<void> execute5050SafeMove(int row, int col) async {
     if (!FeatureFlags.enable5050SafeMove || !isCellIn5050Situation(row, col)) {
       return;
     }
     
-    // For now, we'll just reveal the cell normally
-    // In a full implementation, this might involve more sophisticated logic
-    await revealCell(row, col);
+    try {
+      _clearError();
+      
+      // Start timer on first move
+      if (!_timerService.isRunning) {
+        _timerService.start();
+      }
+      
+      // Get the 50situation for this cell
+      final situations = get5050SituationsForCell(row, col);
+      if (situations.isEmpty) {
+        // Fall back to normal reveal
+        await revealCell(row, col);
+        return;
+      }
+      
+      final situation = situations.first;
+      
+      // Determine the other cell in the 50/50uation
+      final otherRow = (situation.row1 == row && situation.col1 == col) 
+          ? situation.row2 
+          : situation.row1;
+      final otherCol = (situation.row1 == row && situation.col1 == col) 
+          ? situation.col2 
+          : situation.col1;
+      
+      // Attempt safe move with mine movement if needed
+      _gameState = await _repository.perform5050SafeMove(row, col, otherRow, otherCol);
+      
+      // Update 50/50etection after the safe move
+      _update5050Detection();
+      
+      notifyListeners();
+      
+      // Check if game is over and show appropriate dialog
+      if (isGameOver) {
+        _timerService.stop();
+        _handleGameOver();
+      }
+    } catch (e) {
+      _setError('Failed to make safe move: $e');
+    }
   }
 
   // Private helper methods
