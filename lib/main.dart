@@ -4,6 +4,7 @@ import 'dart:io';
 import 'presentation/providers/game_provider.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'core/game_mode_config.dart';
+import 'core/feature_flags.dart';
 import 'presentation/pages/game_page.dart';
 
 void main() async {
@@ -12,6 +13,18 @@ void main() async {
   // Validate game configuration before app starts
   try {
     await GameModeConfig.instance.loadGameModes();
+    
+    // Initialize FeatureFlags from JSON configuration
+    // This ensures the flags are set before any providers are created
+    FeatureFlags.enableFirstClickGuarantee = GameModeConfig.instance.defaultKickstarterMode;
+    FeatureFlags.enable5050Detection = GameModeConfig.instance.default5050Detection;
+    FeatureFlags.enable5050SafeMove = GameModeConfig.instance.default5050SafeMove;
+    
+    print('DEBUG: main - FeatureFlags initialized from JSON:');
+    print('DEBUG:   enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
+    print('DEBUG:   enable5050Detection: ${FeatureFlags.enable5050Detection}');
+    print('DEBUG:   enable5050SafeMove: ${FeatureFlags.enable5050SafeMove}');
+    
     // print('Game configuration validation passed');
   } catch (e) {
     // print('CRITICAL ERROR: Game configuration validation failed: $e');

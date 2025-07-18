@@ -212,10 +212,11 @@ class GameModeConfig {
     ];
     _defaultMode = 'hard';
     
-    // Set feature defaults to match JSON
-    _defaultKickstarterMode = true;
-    _default5050Detection = true;
-    _default5050SafeMove = true;
+    // Use safe fallback values for features (false = disabled)
+    // This ensures the app doesn't crash if JSON is invalid
+    _defaultKickstarterMode = false;
+    _default5050Detection = false;
+    _default5050SafeMove = false;
   }
 
   /// Get all enabled game modes
