@@ -59,23 +59,28 @@ class GameRepositoryImpl implements GameRepository {
       throw StateError('Game not initialized');
     }
     
+    // No action if game is over
+    if (_currentState!.isGameOver) {
+      return _currentState!;
+    }
+    
     if (!_currentState!.isValidPosition(row, col)) {
       throw RangeError('Invalid position ($row, $col)');
     }
     
-    print('DEBUG: revealCell - Revealing cell ($row,$col)');
+    // print('DEBUG: revealCell - Revealing cell ($row,$col)');
     final originalCell = _currentState!.getCell(row, col);
-    print('DEBUG: revealCell - Original cell state: hasBomb=${originalCell.hasBomb}, bombsAround=${originalCell.bombsAround}, isRevealed=${originalCell.isRevealed}, isFlagged=${originalCell.isFlagged}');
+    // print('DEBUG: revealCell - Original cell state: hasBomb=${originalCell.hasBomb}, bombsAround=${originalCell.bombsAround}, isRevealed=${originalCell.isRevealed}, isFlagged=${originalCell.isFlagged}');
     
     // Cannot reveal flagged cells
     if (originalCell.isFlagged) {
-      print('DEBUG: revealCell - Cell is flagged, cannot reveal');
+      // print('DEBUG: revealCell - Cell is flagged, cannot reveal');
       return _currentState!;
     }
     
     // Cannot reveal already revealed cells
     if (originalCell.isRevealed) {
-      print('DEBUG: revealCell - Cell is already revealed');
+      // print('DEBUG: revealCell - Cell is already revealed');
       return _currentState!;
     }
     
@@ -84,7 +89,7 @@ class GameRepositoryImpl implements GameRepository {
     
     // First Click Guarantee Logic
     if (_isFirstClick && FeatureFlags.enableFirstClickGuarantee) {
-      print('DEBUG: revealCell - First click guarantee enabled, ensuring cascade');
+      // print('DEBUG: revealCell - First click guarantee enabled, ensuring cascade');
       _ensureFirstClickCascade(newBoard, row, col);
       // Update bomb counts incrementally after mine relocation
       _updateBombCountsAfterMineMove(newBoard);
@@ -92,17 +97,17 @@ class GameRepositoryImpl implements GameRepository {
     
     // Get the updated target cell after potential mine relocation
     final targetCell = newBoard[row][col];
-    print('DEBUG: revealCell - Target cell after first click guarantee: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}');
+    // print('DEBUG: revealCell - Target cell after first click guarantee: hasBomb=${targetCell.hasBomb}, bombsAround=${targetCell.bombsAround}');
     
     // Check if cell is empty AFTER first click guarantee logic
     final wasEmpty = !targetCell.hasBomb && targetCell.bombsAround == 0;
-    print('DEBUG: revealCell - Cell is empty: $wasEmpty');
+    // print('DEBUG: revealCell - Cell is empty: $wasEmpty');
     
     // Reveal the cell
     targetCell.reveal();
     
     if (targetCell.isExploded) {
-      print('DEBUG: revealCell - Game over! Hit a bomb');
+      // print('DEBUG: revealCell - Game over! Hit a bomb');
       // Game over - reveal all mines, marking the hit bomb specially
       _revealAllMines(newBoard, exploded: true, hitBombRow: row, hitBombCol: col);
       _currentState = _currentState!.copyWith(
@@ -111,23 +116,23 @@ class GameRepositoryImpl implements GameRepository {
         endTime: DateTime.now(),
       );
     } else {
-      print('DEBUG: revealCell - Safe reveal, cell is not exploded');
+      // print('DEBUG: revealCell - Safe reveal, cell is not exploded');
       // Safe reveal - cascade if empty
       if (wasEmpty) {
-        print('DEBUG: revealCell - Cell is empty, calling cascade');
+        // print('DEBUG: revealCell - Cell is empty, calling cascade');
         _cascadeReveal(newBoard, row, col);
       } else {
-        print('DEBUG: revealCell - Cell is not empty, not calling cascade');
+        // print('DEBUG: revealCell - Cell is not empty, not calling cascade');
       }
       // Count revealed and flagged cells
       final counts = _countCells(newBoard);
-      print('DEBUG: revealCell - Cell counts: revealed=${counts['revealed']}, flagged=${counts['flagged']}');
+      // print('DEBUG: revealCell - Cell counts: revealed=${counts['revealed']}, flagged=${counts['flagged']}');
       // Check for win
       final isWon = counts['revealed'] == (_currentState!.totalCells - _currentState!.minesCount);
       
       // If game is won, flag all unflagged mines
       if (isWon) {
-        print('DEBUG: revealCell - Game won!');
+        // print('DEBUG: revealCell - Game won!');
         _flagAllUnflaggedMines(newBoard);
       }
       
@@ -143,7 +148,7 @@ class GameRepositoryImpl implements GameRepository {
     // Mark that first click has been made
     _isFirstClick = false;
     
-    print('DEBUG: revealCell - Cell reveal completed');
+    // print('DEBUG: revealCell - Cell reveal completed');
     return _currentState!;
   }
 
@@ -329,25 +334,25 @@ class GameRepositoryImpl implements GameRepository {
   @override
   Future<GameState> perform5050SafeMove(int clickedRow, int clickedCol, int otherRow, int otherCol) async {
     if (_currentState == null || _currentState!.isGameOver) {
-      print('DEBUG: perform5050SafeMove - Game is over, no action taken');
+      // print('DEBUG: perform5050SafeMove - Game is over, no action taken');
       return _currentState!; // No action if game is over
     }
     
     if (!_currentState!.isValidPosition(clickedRow, clickedCol) || 
         !_currentState!.isValidPosition(otherRow, otherCol)) {
-      print('DEBUG: perform5050SafeMove - Invalid position: clicked($clickedRow,$clickedCol) other($otherRow,$otherCol)');
+      // print('DEBUG: perform5050SafeMove - Invalid position: clicked($clickedRow,$clickedCol) other($otherRow,$otherCol)');
       throw RangeError('Invalid position');
     }
     
     final clickedCell = _currentState!.getCell(clickedRow, clickedCol);
     final otherCell = _currentState!.getCell(otherRow, otherCol);
     
-    print('DEBUG: perform5050SafeMove - Starting safe move from ($clickedRow,$clickedCol) to ($otherRow,$otherCol)');
-    print('DEBUG: perform5050SafeMove - Clicked cell has bomb: ${clickedCell.hasBomb}, isRevealed: ${clickedCell.isRevealed}, isFlagged: ${clickedCell.isFlagged}');
-    print('DEBUG: perform5050SafeMove - Other cell has bomb: ${otherCell.hasBomb}, isRevealed: ${otherCell.isRevealed}, isFlagged: ${otherCell.isFlagged}');
+    // print('DEBUG: perform5050SafeMove - Starting safe move from ($clickedRow,$clickedCol) to ($otherRow,$otherCol)');
+    // print('DEBUG: perform5050SafeMove - Clicked cell has bomb: ${clickedCell.hasBomb}, isRevealed: ${clickedCell.isRevealed}, isFlagged: ${clickedCell.isFlagged}');
+    // print('DEBUG: perform5050SafeMove - Other cell has bomb: ${otherCell.hasBomb}, isRevealed: ${otherCell.isRevealed}, isFlagged: ${otherCell.isFlagged}');
     
     if (clickedCell.isRevealed || clickedCell.isFlagged) {
-      print('DEBUG: perform5050SafeMove - Clicked cell already revealed or flagged, no action needed');
+      // print('DEBUG: perform5050SafeMove - Clicked cell already revealed or flagged, no action needed');
       return _currentState!; // No action needed
     }
     
@@ -359,40 +364,40 @@ class GameRepositoryImpl implements GameRepository {
     final otherCellNew = newBoard[otherRow][otherCol];
     
     if (clickedCellNew.hasBomb) {
-      print('DEBUG: perform5050SafeMove - Moving mine from ($clickedRow,$clickedCol) to ($otherRow,$otherCol)');
+      // print('DEBUG: perform5050SafeMove - Moving mine from ($clickedRow,$clickedCol) to ($otherRow,$otherCol)');
       // Simple 50/50 mine movement: just swap the mine between the two cells
       newBoard[clickedRow][clickedCol] = clickedCellNew.copyWith(hasBomb: false);
       newBoard[otherRow][otherCol] = otherCellNew.copyWith(hasBomb: true);
       
-      print('DEBUG: perform5050SafeMove - Mine moved, updating bomb counts...');
+      // print('DEBUG: perform5050SafeMove - Mine moved, updating bomb counts...');
       // Update bomb counts for affected cells
       _updateBombCountsAfterMineMove(newBoard);
-      print('DEBUG: perform5050SafeMove - Bomb counts updated');
+      // print('DEBUG: perform5050SafeMove - Bomb counts updated');
     } else {
-      print('DEBUG: perform5050SafeMove - Clicked cell does not have a bomb, no mine movement needed');
+      // print('DEBUG: perform5050SafeMove - Clicked cell does not have a bomb, no mine movement needed');
     }
     
     // Now reveal the clicked cell (which is guaranteed to be safe)
     final updatedClickedCell = newBoard[clickedRow][clickedCol];
-    print('DEBUG: perform5050SafeMove - Revealing clicked cell: hasBomb=${updatedClickedCell.hasBomb}, bombsAround=${updatedClickedCell.bombsAround}');
+    // print('DEBUG: perform5050SafeMove - Revealing clicked cell: hasBomb=${updatedClickedCell.hasBomb}, bombsAround=${updatedClickedCell.bombsAround}');
     
     // Simply reveal the clicked cell - no cascade needed for 50/50
     updatedClickedCell.reveal();
     
-    print('DEBUG: perform5050SafeMove - 50/50 safe move: NO CASCADE - only revealing the clicked cell');
+    // print('DEBUG: perform5050SafeMove - 50/50 safe move: NO CASCADE - only revealing the clicked cell');
     
-    print('DEBUG: perform5050SafeMove - Clicked cell final state: hasBomb=${newBoard[clickedRow][clickedCol].hasBomb}, bombsAround=${newBoard[clickedRow][clickedCol].bombsAround}, isRevealed=${newBoard[clickedRow][clickedCol].isRevealed}');
+    // print('DEBUG: perform5050SafeMove - Clicked cell final state: hasBomb=${newBoard[clickedRow][clickedCol].hasBomb}, bombsAround=${newBoard[clickedRow][clickedCol].bombsAround}, isRevealed=${newBoard[clickedRow][clickedCol].isRevealed}');
     
     // Count revealed and flagged cells
     final counts = _countCells(newBoard);
-    print('DEBUG: perform5050SafeMove - Final counts: revealed=${counts['revealed']}, flagged=${counts['flagged']}');
+    // print('DEBUG: perform5050SafeMove - Final counts: revealed=${counts['revealed']}, flagged=${counts['flagged']}');
     
     // Check for win
     final isWon = counts['revealed'] == (_currentState!.totalCells - _currentState!.minesCount);
     
     // If game is won, flag all unflagged mines
     if (isWon) {
-      print('DEBUG: perform5050SafeMove - Game won!');
+      // print('DEBUG: perform5050SafeMove - Game won!');
       _flagAllUnflaggedMines(newBoard);
     }
     
@@ -404,7 +409,7 @@ class GameRepositoryImpl implements GameRepository {
       endTime: isWon ? DateTime.now() : null,
     );
     
-    print('DEBUG: perform5050SafeMove - Safe move completed');
+    // print('DEBUG: perform5050SafeMove - Safe move completed');
     return _currentState!;
   }
 
@@ -414,7 +419,7 @@ class GameRepositoryImpl implements GameRepository {
     final rows = board.length;
     final cols = board[0].length;
     
-    print('DEBUG: _updateBombCountsAfterMineMove - Starting bomb count update for ${rows}x${cols} board');
+    // print('DEBUG: _updateBombCountsAfterMineMove - Starting bomb count update for ${rows}x${cols} board');
     
     // After mine movement, we need to recalculate ALL bomb counts
     // because the mine positions have changed
@@ -425,7 +430,7 @@ class GameRepositoryImpl implements GameRepository {
           final oldBombsAround = board[r][c].bombsAround;
           final actualBombsAround = _countBombsAround(board, r, c);
           if (oldBombsAround != actualBombsAround) {
-            print('DEBUG: _updateBombCountsAfterMineMove - Cell ($r,$c): $oldBombsAround -> $actualBombsAround');
+            // print('DEBUG: _updateBombCountsAfterMineMove - Cell ($r,$c): $oldBombsAround -> $actualBombsAround');
             board[r][c] = board[r][c].copyWith(bombsAround: actualBombsAround);
             updatedCount++;
           }
@@ -433,7 +438,7 @@ class GameRepositoryImpl implements GameRepository {
       }
     }
     
-    print('DEBUG: _updateBombCountsAfterMineMove - Updated $updatedCount cells');
+    // print('DEBUG: _updateBombCountsAfterMineMove - Updated $updatedCount cells');
   }
 
   /// Count bombs around a specific cell
@@ -606,9 +611,9 @@ class GameRepositoryImpl implements GameRepository {
 
   // Old cascade logic (used in app, will be replaced)
   void _cascadeReveal(List<List<Cell>> board, int row, int col) {
-    print('DEBUG: _cascadeReveal - Starting cascade reveal from ($row,$col)');
+    // print('DEBUG: _cascadeReveal - Starting cascade reveal from ($row,$col)');
     final initialCell = board[row][col];
-    print('DEBUG: _cascadeReveal - Initial cell hasBomb: ${initialCell.hasBomb}, bombsAround: ${initialCell.bombsAround}');
+    // print('DEBUG: _cascadeReveal - Initial cell hasBomb: ${initialCell.hasBomb}, bombsAround: ${initialCell.bombsAround}');
     
     revealCascade(board, row, col);
     
@@ -621,7 +626,7 @@ class GameRepositoryImpl implements GameRepository {
         }
       }
     }
-    print('DEBUG: _cascadeReveal - Cascade reveal completed, total revealed cells: $revealedCount');
+    // print('DEBUG: _cascadeReveal - Cascade reveal completed, total revealed cells: $revealedCount');
   }
 
   void _revealAllMines(List<List<Cell>> board, {bool exploded = true, int? hitBombRow, int? hitBombCol}) {

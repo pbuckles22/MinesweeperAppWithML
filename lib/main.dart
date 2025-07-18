@@ -20,10 +20,10 @@ void main() async {
     FeatureFlags.enable5050Detection = GameModeConfig.instance.default5050Detection;
     FeatureFlags.enable5050SafeMove = GameModeConfig.instance.default5050SafeMove;
     
-    print('DEBUG: main - FeatureFlags initialized from JSON:');
-    print('DEBUG:   enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
-    print('DEBUG:   enable5050Detection: ${FeatureFlags.enable5050Detection}');
-    print('DEBUG:   enable5050SafeMove: ${FeatureFlags.enable5050SafeMove}');
+    // print('DEBUG: main - FeatureFlags initialized from JSON:');
+    // print('DEBUG:   enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
+    // print('DEBUG:   enable5050Detection: ${FeatureFlags.enable5050Detection}');
+    // print('DEBUG:   enable5050SafeMove: ${FeatureFlags.enable5050SafeMove}');
     
     // print('Game configuration validation passed');
   } catch (e) {

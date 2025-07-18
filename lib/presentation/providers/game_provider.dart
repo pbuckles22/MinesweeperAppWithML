@@ -194,13 +194,13 @@ class GameProvider extends ChangeNotifier {
     if (_current5050Situations.isNotEmpty) {
       final currentSituation = _current5050Situations.first;
       if (FiftyFiftyDetector.is5050SituationStillValid(_gameState!, currentSituation)) {
-        print('DEBUG: _update5050Detection - Current 50/50 is still valid, keeping it');
+        // print('DEBUG: _update5050Detection - Current 50/50 is still valid, keeping it');
         // Keep the current 50/50 situation, just re-mark the cells
         _clear5050Markings();
         _mark5050Cells();
         return;
       } else {
-        print('DEBUG: _update5050Detection - Current 50/50 is no longer valid, re-detecting');
+        // print('DEBUG: _update5050Detection - Current 50/50 is no longer valid, re-detecting');
       }
     }
 

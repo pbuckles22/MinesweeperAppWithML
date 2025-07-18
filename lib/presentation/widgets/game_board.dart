@@ -210,16 +210,16 @@ class _GameBoardState extends State<GameBoard> {
                       final is5050Cell = gameProvider.isCellIn5050Situation(row, col);
                       final is5050SafeMoveEnabled = FeatureFlags.enable5050SafeMove;
                       
-                      print('DEBUG: GameBoard onTap - Cell ($row,$col):');
-                      print('DEBUG:   isCellIn5050Situation: $is5050Cell');
-                      print('DEBUG:   enable5050SafeMove: $is5050SafeMoveEnabled');
-                      print('DEBUG:   FeatureFlags.enable5050Detection: ${FeatureFlags.enable5050Detection}');
+                      // print('DEBUG: GameBoard onTap - Cell ($row,$col):');
+                      // print('DEBUG:   isCellIn5050Situation: $is5050Cell');
+                      // print('DEBUG:   enable5050SafeMove: $is5050SafeMoveEnabled');
+                      // print('DEBUG:   FeatureFlags.enable5050Detection: ${FeatureFlags.enable5050Detection}');
                       
                       if (is5050Cell && is5050SafeMoveEnabled) {
-                        print('DEBUG: GameBoard onTap - Executing 50/50 safe move');
+                        // print('DEBUG: GameBoard onTap - Executing 50/50 safe move');
                         gameProvider.execute5050SafeMove(row, col);
                       } else {
-                        print('DEBUG: GameBoard onTap - Executing normal reveal');
+                        // print('DEBUG: GameBoard onTap - Executing normal reveal');
                         gameProvider.revealCell(row, col);
                       }
                     },
