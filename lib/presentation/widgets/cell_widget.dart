@@ -30,25 +30,45 @@ class CellWidget extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return GestureDetector(
-          onTap: () {
-            if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
-              onTap();
-            }
+        return RawGestureDetector(
+          // Define custom gestures with shorter long press duration
+          gestures: <Type, GestureRecognizerFactory>{
+            // Custom long press with shorter duration (200ms instead of default ~500ms)
+            LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                LongPressGestureRecognizer>(
+              () => LongPressGestureRecognizer(
+                duration: const Duration(milliseconds: 200), // Much faster than default
+              ),
+              (LongPressGestureRecognizer instance) {
+                instance.onLongPress = () {
+                  // print('DEBUG: Long press detected on cell ($row, $col)');
+                  // print('DEBUG: Cell state: ${cell.state}');
+                  // print('DEBUG: isPlaying: ${gameProvider.isPlaying}');
+                  // print('DEBUG: isValidAction: ${gameProvider.isValidAction(row, col)}');
+                  if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
+                    // print('DEBUG: Executing long press action');
+                    HapticService.mediumImpact();
+                    onLongPress();
+                  } else {
+                    // print('DEBUG: Long press blocked - game not playing or invalid action');
+                  }
+                };
+              },
+            ),
+            // Standard tap gesture
+            TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                TapGestureRecognizer>(
+              () => TapGestureRecognizer(),
+              (TapGestureRecognizer instance) {
+                instance.onTap = () {
+                  if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
+                    onTap();
+                  }
+                };
+              },
+            ),
           },
-          onLongPress: () {
-            // print('DEBUG: Long press detected on cell ($row, $col)');
-            // print('DEBUG: Cell state: ${cell.state}');
-            // print('DEBUG: isPlaying: ${gameProvider.isPlaying}');
-            // print('DEBUG: isValidAction: ${gameProvider.isValidAction(row, col)}');
-            if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
-              // print('DEBUG: Executing long press action');
-              HapticService.mediumImpact();
-              onLongPress();
-            } else {
-              // print('DEBUG: Long press blocked - game not playing or invalid action');
-            }
-          },
+          behavior: HitTestBehavior.opaque,
           child: Container(
             margin: const EdgeInsets.all(1.0),
             decoration: BoxDecoration(
