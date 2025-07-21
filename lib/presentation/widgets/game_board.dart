@@ -19,6 +19,33 @@ class _GameBoardState extends State<GameBoard> {
   static const double _minZoom = 0.5;
   static const double _maxZoom = 3.0;
   static const double _zoomStep = 0.05;
+  String? _lastBoardKey; // Track board size changes
+  
+  // Calculate optimal cell size based on available height and board rows
+  double _calculateOptimalCellSize(BuildContext context, GameState gameState) {
+    // Get available height (subtract header, zoom controls, and padding)
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Estimate space taken by other UI elements
+    final appBarHeight = MediaQuery.of(context).padding.top + kToolbarHeight; // ~100px
+    final headerHeight = 80.0; // Game header with stats
+    final zoomControlsHeight = 60.0; // Zoom controls
+    final bottomPadding = MediaQuery.of(context).padding.bottom; // Safe area
+    final verticalPadding = 32.0; // General padding
+    
+    // Calculate available height for the board
+    final availableHeight = screenHeight - appBarHeight - headerHeight - zoomControlsHeight - bottomPadding - verticalPadding;
+    
+    // Calculate optimal cell size based on rows (100% vertical fill)
+    final optimalCellSize = availableHeight / gameState.rows;
+    
+    // Ensure minimum cell size for usability
+    const minCellSize = 20.0;
+    const maxCellSize = 80.0;
+    
+    return optimalCellSize.clamp(minCellSize, maxCellSize);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +58,16 @@ class _GameBoardState extends State<GameBoard> {
             child: CircularProgressIndicator(),
           );
         }
+        
+        // Reset zoom level when game state changes (new game, different difficulty)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Check if this is a new game state (different board size)
+          final currentBoardKey = '${gameState.rows}x${gameState.columns}';
+          if (_lastBoardKey != currentBoardKey) {
+            _lastBoardKey = currentBoardKey;
+            _resetZoomLevel();
+          }
+        });
 
         return Column(
           children: [
@@ -142,8 +179,8 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    // Use consistent cell size across all difficulties
-    const double baseCellSize = 40.0; // Standard cell size for all difficulties
+    // Calculate optimal cell size based on available height and board rows
+    final baseCellSize = _calculateOptimalCellSize(context, gameState);
     
     final cellSize = baseCellSize * _zoomLevel;
     final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
@@ -268,6 +305,13 @@ class _GameBoardState extends State<GameBoard> {
         _zoomLevel = (_zoomLevel - _zoomStep).clamp(_minZoom, _maxZoom);
       });
     }
+  }
+
+  // Reset zoom level when game state changes (new game, different difficulty)
+  void _resetZoomLevel() {
+    setState(() {
+      _zoomLevel = 1.0; // Reset to 100% zoom for optimal sizing
+    });
   }
 
   String _progressString(double progress) {
