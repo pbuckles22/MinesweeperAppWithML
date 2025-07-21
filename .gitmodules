@@ -1,0 +1,3 @@
+[submodule "external/csp_solver"]
+	path = external/csp_solver
+	url = https://github.com/pbuckles22/MinewsweeperSolver_CSPProbablistic

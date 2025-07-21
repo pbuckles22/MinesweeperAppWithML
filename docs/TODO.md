@@ -92,3 +92,58 @@
 
 **Current Test Coverage: 123+ tests covering all standard Minesweeper functionality and 50/50 scenarios**
 **Next Major Feature: 50/50 Situation Detection (advanced gameplay improvement)**
+
+# CSP Probability Integration TODO
+
+## Native Swift/PythonKit Integration Plan (Ordered Steps)
+
+1. **Add Python CSP+Probability Solver as Submodule**
+   - Use `git submodule add https://github.com/pbuckles22/MinewsweeperSolver_CSPProbablistic external/csp_solver`
+   - Run `git submodule update --init --recursive`
+   - Ensure the Python files are present in `external/csp_solver`
+
+2. **Extend the Python Codebase for Explicit 50/50 Detection**
+   - In the submodule, add a function (e.g., `find_5050_situations(board_state)`) in `probabilistic_guesser.py` or a new module.
+   - This function should:
+     - Run the probability analysis.
+     - Identify and return all pairs/groups of cells with exactly 50% mine probability (i.e., true 50/50s).
+     - Optionally, return the "best guess" cell(s) if there are multiple 50/50s.
+
+3. **Test the New Python Function**
+   - Write and run unit tests in the Python repo to ensure the new 50/50 detection works as expected.
+   - Run the full test suite (`pytest`) to maintain high coverage.
+
+4. **Include Python Files in iOS App Bundle**
+   - In Xcode, add the relevant `.py` files from `external/csp_solver` to the Runner target.
+   - Ensure they are copied into the app bundle at build time.
+
+5. **Set Up Flutter MethodChannel (Dart Side)**
+   - Create a `MethodChannel` in Dart for communication with iOS.
+   - Implement a function to send board state and receive solver results.
+   - Test Dart-to-Swift communication with a dummy response.
+
+6. **Set Up Swift Side with PythonKit**
+   - Add PythonKit to the iOS project via Swift Package Manager.
+   - In `AppDelegate.swift`, set up the `FlutterMethodChannel` handler.
+   - On `solveMove`, import and call the Python solver script using PythonKit.
+   - Test Swift-to-Python integration with a simple script.
+
+7. **Integrate and Test End-to-End**
+   - After full integration, test end-to-end: Dart → Swift → Python → Swift → Dart.
+   - Ensure the 50/50 detection results are returned and displayed in the Flutter app.
+
+8. **Update UI Toggles and Logic**
+   - Keep 50/50 toggles and UI in place.
+   - Wire up toggles to call the new native integration.
+
+9. **Ongoing**
+   - When updating the Python repo, use `git submodule update --remote` to pull changes.
+   - Ensure all changes are tested at each stage before moving to the next.
+
+---
+
+**Current Step:**
+- [ ] 1. Add Python CSP+Probability Solver as Submodule and test file presence.
+- [ ] 2. Extend the Python codebase for explicit 50/50 detection and test in Python.
+
+---

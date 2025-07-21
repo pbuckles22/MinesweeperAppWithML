@@ -58,6 +58,9 @@ class GameRepositoryImpl implements GameRepository {
     if (_currentState == null) {
       throw StateError('Game not initialized');
     }
+    if (_currentState!.isGameOver) {
+      return _currentState!; // Prevent revealing after game over
+    }
     
     if (!_currentState!.isValidPosition(row, col)) {
       throw RangeError('Invalid position ($row, $col)');

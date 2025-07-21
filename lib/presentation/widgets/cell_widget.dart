@@ -25,6 +25,7 @@ class CellWidget extends StatelessWidget {
     return Consumer<GameProvider>(
       builder: (context, gameProvider, child) {
         final cell = gameProvider.getCell(row, col);
+        final is5050 = gameProvider.isCellIn5050Situation(row, col);
         
         if (cell == null) {
           return const SizedBox.shrink();
@@ -37,10 +38,10 @@ class CellWidget extends StatelessWidget {
             }
           },
           onLongPress: () {
-            print('DEBUG: Long press detected on cell ($row, $col)');
-            print('DEBUG: Cell state: ${cell.state}');
-            print('DEBUG: isPlaying: ${gameProvider.isPlaying}');
-            print('DEBUG: isValidAction: ${gameProvider.isValidAction(row, col)}');
+            print('DEBUG: Long press detected on cell ([38;5;208m$row[0m, [38;5;208m$col[0m)');
+            print('DEBUG: Cell state: [38;5;208m${cell.state}[0m');
+            print('DEBUG: isPlaying: [38;5;208m${gameProvider.isPlaying}[0m');
+            print('DEBUG: isValidAction: [38;5;208m${gameProvider.isValidAction(row, col)}[0m');
             if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
               print('DEBUG: Executing long press action');
               HapticService.mediumImpact();
@@ -52,15 +53,15 @@ class CellWidget extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.all(1.0),
             decoration: BoxDecoration(
-              color: _getCellColor(context, cell),
+              color: _getCellColor(context, cell, is5050),
               border: Border.all(
-                color: _getCellBorderColor(context, cell),
-                width: _getCellBorderWidth(cell),
+                color: _getCellBorderColor(context, cell, is5050),
+                width: _getCellBorderWidth(is5050),
               ),
               borderRadius: BorderRadius.circular(4.0),
             ),
             child: Center(
-              child: _buildCellContent(context, cell),
+              child: _buildCellContent(context, cell, is5050),
             ),
           ),
         );
@@ -68,7 +69,7 @@ class CellWidget extends StatelessWidget {
     );
   }
 
-  Color _getCellColor(BuildContext context, Cell cell) {
+  Color _getCellColor(BuildContext context, Cell cell, bool is5050) {
     if (cell.isHitBomb) {
       return Colors.yellow.shade600; // Yellow background for the bomb that was hit
     } else if (cell.isExploded) {
@@ -79,28 +80,28 @@ class CellWidget extends StatelessWidget {
       return Theme.of(context).colorScheme.surface;
     } else if (cell.isFlagged) {
       return Theme.of(context).colorScheme.primaryContainer;
-    } else if (cell.isFiftyFifty) {
+    } else if (is5050) {
       return Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.8);
     } else {
       return Theme.of(context).colorScheme.surfaceVariant;
     }
   }
 
-  Color _getCellBorderColor(BuildContext context, Cell cell) {
-    if (cell.isFiftyFifty && FeatureFlags.enable5050Detection) {
+  Color _getCellBorderColor(BuildContext context, Cell cell, bool is5050) {
+    if (is5050 && FeatureFlags.enable5050Detection) {
       return Colors.orange.shade600; // Orange border for 50/50 cells
     }
     return Theme.of(context).colorScheme.outline.withOpacity(0.3);
   }
 
-  double _getCellBorderWidth(Cell cell) {
-    if (cell.isFiftyFifty && FeatureFlags.enable5050Detection) {
+  double _getCellBorderWidth(bool is5050) {
+    if (is5050 && FeatureFlags.enable5050Detection) {
       return 2.0; // Thicker border for 50/50 cells
     }
     return 1.0;
   }
 
-  Widget _buildCellContent(BuildContext context, Cell cell) {
+  Widget _buildCellContent(BuildContext context, Cell cell, bool is5050) {
     if (cell.isHitBomb) {
       // The specific bomb that was clicked and caused the game to end
       return const Text(
@@ -142,7 +143,7 @@ class CellWidget extends StatelessWidget {
       } else {
         return const SizedBox.shrink(); // Empty cell
       }
-    } else if (cell.isFiftyFifty && FeatureFlags.enable5050Detection) {
+    } else if (is5050 && FeatureFlags.enable5050Detection) {
       // Show a subtle indicator for 50/50 cells
       return Stack(
         alignment: Alignment.center,
