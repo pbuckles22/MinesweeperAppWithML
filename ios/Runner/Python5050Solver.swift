@@ -21,8 +21,9 @@ import PythonKit
         print("🔍 Found Python.framework at: \(pythonFrameworkPath)")
 
         // 3. Set environment variables
-        setenv("PYTHONHOME", stdLibPath, 1)
-        setenv("PYTHONPATH", stdLibPath, 1)
+        let stdLibPathInsideFramework = Bundle.main.privateFrameworksPath! + "/Python.framework/lib/python3.14"
+        setenv("PYTHONHOME", stdLibPathInsideFramework, 1)
+        setenv("PYTHONPATH", stdLibPathInsideFramework, 1)
         print("🔍 Set PYTHONHOME and PYTHONPATH")
 
         // 4. Tell PythonKit to use the embedded Python
