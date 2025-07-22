@@ -32,3 +32,22 @@ Runner/GeneratedPluginRegistrant.*
 !default.mode2v3
 !default.pbxuser
 !default.perspectivev3
+
+# PythonKit/Apple-support artifacts
+Python-3.14-iOS-support.tar.gz
+Python.xcframework/
+VERSIONS
+
+# Xcode project backups
+Runner.xcodeproj/project.pbxproj.bak.*
+
+# Xcode/SwiftPM build artifacts
+Runner.xcworkspace/xcshareddata/swiftpm/
+testbed/
+
+# CocoaPods (if not committed)
+Pods/
+Podfile.lock
+
+# Other
+*.DS_Store
