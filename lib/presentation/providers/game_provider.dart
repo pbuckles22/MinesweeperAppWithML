@@ -164,21 +164,159 @@ class GameProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    // Placeholder: assign 0.5 to all unrevealed cells for demonstration
-    final probabilityMap = <String, double>{};
-    for (final row in _gameState!.board) {
-      for (final cell in row) {
-        if (cell.isUnrevealed) {
-          probabilityMap['(${cell.row}, ${cell.col})'] = 0.5; // TODO: Replace with real probability
-        }
-      }
-    }
+    
+    // Calculate real probabilities based on game state
+    final probabilityMap = _calculateRealProbabilities();
+    
     try {
       _fiftyFiftyCells = await Native5050Solver.find5050(probabilityMap);
     } catch (e) {
+      print('DEBUG: 50/50 detection failed: $e');
       _fiftyFiftyCells = [];
     }
     notifyListeners();
+  }
+
+  /// Calculate real probabilities for 50/50 detection
+  Map<String, double> _calculateRealProbabilities() {
+    final probabilityMap = <String, double>{};
+    
+    if (_gameState == null) return probabilityMap;
+    
+    // Get all unrevealed cells
+    final unrevealedCells = <List<int>>[];
+    for (int row = 0; row < _gameState!.board.length; row++) {
+      for (int col = 0; col < _gameState!.board[row].length; col++) {
+        final cell = _gameState!.getCell(row, col);
+        if (cell.isUnrevealed && !cell.isFlagged) {
+          unrevealedCells.add([row, col]);
+        }
+      }
+    }
+    
+    // Calculate probabilities based on revealed numbers
+    for (final cellPos in unrevealedCells) {
+      final row = cellPos[0];
+      final col = cellPos[1];
+      
+      // Get revealed neighbors
+      final revealedNeighbors = _getRevealedNeighbors(row, col);
+      
+      if (revealedNeighbors.isEmpty) {
+        // No revealed neighbors, use neutral probability
+        probabilityMap['($row, $col)'] = 0.3;
+        continue;
+      }
+      
+      // Calculate probability based on revealed neighbors
+      double totalProbability = 0.0;
+      int neighborCount = 0;
+      
+      for (final neighbor in revealedNeighbors) {
+        final neighborRow = neighbor[0];
+        final neighborCol = neighbor[1];
+        final neighborCell = _gameState!.getCell(neighborRow, neighborCol);
+        
+        if (neighborCell.isRevealed && neighborCell.bombsAround > 0) {
+          // Count unrevealed neighbors of this revealed cell
+          final unrevealedNeighbors = _getUnrevealedNeighbors(neighborRow, neighborCol);
+          final flaggedNeighbors = _getFlaggedNeighbors(neighborRow, neighborCol);
+          
+          if (unrevealedNeighbors.isNotEmpty) {
+            // Calculate local probability
+            final remainingMines = neighborCell.bombsAround - flaggedNeighbors.length;
+            final localProbability = remainingMines / unrevealedNeighbors.length;
+            totalProbability += localProbability;
+            neighborCount++;
+          }
+        }
+      }
+      
+      if (neighborCount > 0) {
+        final avgProbability = totalProbability / neighborCount;
+        probabilityMap['($row, $col)'] = avgProbability;
+      } else {
+        probabilityMap['($row, $col)'] = 0.3; // Neutral probability
+      }
+    }
+    
+    return probabilityMap;
+  }
+
+  /// Get revealed neighbors of a cell
+  List<List<int>> _getRevealedNeighbors(int row, int col) {
+    final neighbors = <List<int>>[];
+    
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue;
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        if (_isValidPosition(nr, nc)) {
+          final cell = _gameState!.getCell(nr, nc);
+          if (cell.isRevealed) {
+            neighbors.add([nr, nc]);
+          }
+        }
+      }
+    }
+    
+    return neighbors;
+  }
+
+  /// Get unrevealed neighbors of a cell
+  List<List<int>> _getUnrevealedNeighbors(int row, int col) {
+    final neighbors = <List<int>>[];
+    
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue;
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        if (_isValidPosition(nr, nc)) {
+          final cell = _gameState!.getCell(nr, nc);
+          if (cell.isUnrevealed && !cell.isFlagged) {
+            neighbors.add([nr, nc]);
+          }
+        }
+      }
+    }
+    
+    return neighbors;
+  }
+
+  /// Get flagged neighbors of a cell
+  List<List<int>> _getFlaggedNeighbors(int row, int col) {
+    final neighbors = <List<int>>[];
+    
+    for (int dr = -1; dr <= 1; dr++) {
+      for (int dc = -1; dc <= 1; dc++) {
+        if (dr == 0 && dc == 0) continue;
+        
+        final nr = row + dr;
+        final nc = col + dc;
+        
+        if (_isValidPosition(nr, nc)) {
+          final cell = _gameState!.getCell(nr, nc);
+          if (cell.isFlagged) {
+            neighbors.add([nr, nc]);
+          }
+        }
+      }
+    }
+    
+    return neighbors;
+  }
+
+  /// Check if position is valid
+  bool _isValidPosition(int row, int col) {
+    if (_gameState == null) return false;
+    return row >= 0 && row < _gameState!.board.length &&
+           col >= 0 && col < _gameState!.board[0].length;
   }
 
   /// Check if a cell is in a 50/50 situation
