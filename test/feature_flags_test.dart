@@ -16,7 +16,7 @@ void main() {
   group('FeatureFlags', () {
     test('default values are set correctly', () {
       expect(FeatureFlags.enableFirstClickGuarantee, true); // from JSON
-      expect(FeatureFlags.enable5050Detection, false);       // from JSON (we disabled it)
+      expect(FeatureFlags.enable5050Detection, true);        // from JSON (now enabled)
       expect(FeatureFlags.enable5050SafeMove, true);         // from JSON
       // Update expectations to match JSON config defaults
       expect(FeatureFlags.enableGameStatistics, true);       // from JSON

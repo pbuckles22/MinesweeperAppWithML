@@ -5,6 +5,7 @@ import 'package:flutter_minesweeper/presentation/pages/settings_page.dart';
 import 'package:flutter_minesweeper/presentation/providers/settings_provider.dart';
 import 'package:flutter_minesweeper/presentation/providers/game_provider.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
+import 'package:flutter_minesweeper/core/feature_flags.dart';
 
 void main() {
   group('Settings Page Integration Tests', () {
@@ -17,6 +18,9 @@ void main() {
     });
 
     setUp(() async {
+      // Enable test mode to prevent native solver calls during tests
+      FeatureFlags.enableTestMode = true;
+      
       // Ensure game modes are loaded before creating providers
       await GameModeConfig.instance.loadGameModes();
       
@@ -27,7 +31,14 @@ void main() {
       }
       
       settingsProvider = SettingsProvider();
+      // Create a GameProvider but don't initialize a game to avoid 50/50 detection calls
       gameProvider = GameProvider();
+      // Don't call initializeGame to avoid 50/50 detection calls during tests
+    });
+
+    tearDown(() {
+      // Clean up timers to prevent test framework errors
+      gameProvider.timerService.stop();
     });
 
     Widget createTestWidget() {
@@ -91,8 +102,8 @@ void main() {
         // Scroll to advanced section before checking for toggle
         await tester.scrollUntilVisible(find.text('Advanced / Experimental'), 200.0);
         expect(find.text('50/50 Detection'), findsOneWidget);
-        // Initial value should be false (from JSON config - we disabled it)
-        expect(settingsProvider.is5050DetectionEnabled, false);
+        // Initial value should be true (from JSON config - now enabled)
+        expect(settingsProvider.is5050DetectionEnabled, true);
       });
     });
 
@@ -208,14 +219,14 @@ void main() {
         // We'll use a more direct approach: find the switch that's closest to the label
         final fiftyFiftySwitch = find.byType(Switch).at(0); // First switch in Advanced section
         
-        // Initial value should be false (from JSON config - we disabled it)
-        expect(settingsProvider.is5050DetectionEnabled, false);
-        await tester.tap(fiftyFiftySwitch);
-        await tester.pumpAndSettle();
+        // Initial value should be true (from JSON config - now enabled)
         expect(settingsProvider.is5050DetectionEnabled, true);
         await tester.tap(fiftyFiftySwitch);
         await tester.pumpAndSettle();
         expect(settingsProvider.is5050DetectionEnabled, false);
+        await tester.tap(fiftyFiftySwitch);
+        await tester.pumpAndSettle();
+        expect(settingsProvider.is5050DetectionEnabled, true);
       });
 
       testWidgets('should show 50/50 description when enabled', (WidgetTester tester) async {
@@ -255,15 +266,20 @@ void main() {
         print('DEBUG: Initial 50/50 safe move state: ${settingsProvider.is5050SafeMoveEnabled}');
         print('DEBUG: 50/50 detection enabled: ${settingsProvider.is5050DetectionEnabled}');
         
-        // Since 50/50 detection is disabled, the 50/50 safe move should be disabled and not toggleable
-        // The switch should remain in its initial state (true from JSON config)
-        expect(settingsProvider.is5050SafeMoveEnabled, true); // Should remain true since detection is disabled
+        // Since 50/50 detection is now enabled, the 50/50 safe move should be functional
+        // The switch should toggle normally
+        expect(settingsProvider.is5050SafeMoveEnabled, true); // Initial state from JSON config
         
-        // Try to tap the switch, but it should not change the state since detection is disabled
+        // Tap the switch to toggle it
         await tester.tap(safeMoveSwitch);
         await tester.pumpAndSettle();
         print('DEBUG: After tap, 50/50 safe move state: ${settingsProvider.is5050SafeMoveEnabled}');
-        expect(settingsProvider.is5050SafeMoveEnabled, true); // Should still be true
+        expect(settingsProvider.is5050SafeMoveEnabled, false); // Should toggle to false
+        
+        // Tap again to toggle back
+        await tester.tap(safeMoveSwitch);
+        await tester.pumpAndSettle();
+        expect(settingsProvider.is5050SafeMoveEnabled, true); // Should toggle back to true
       });
     });
 

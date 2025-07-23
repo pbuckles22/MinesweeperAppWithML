@@ -219,6 +219,13 @@ class GameProvider extends ChangeNotifier {
       return;
     }
     
+    // Skip native solver calls during tests to prevent timer issues
+    if (FeatureFlags.enableTestMode) {
+      _fiftyFiftyCells = [];
+      notifyListeners();
+      return;
+    }
+    
     // Calculate simple probabilities based on game state
     final probabilityMap = _calculateSimpleProbabilities();
     
