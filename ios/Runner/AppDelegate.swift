@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import PythonKit
+import Foundation
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -37,11 +38,11 @@ import PythonKit
           result(FlutterError(code: "PYTHON_ERROR", message: "Failed to parse Python result", details: nil))
         }
       } else {
-        result(FlutterMethodNotImplemented)
+        result(FlutterError(code: "NOT_IMPLEMENTED", message: "Method not implemented", details: nil))
       }
     })
 
-    GeneratedPluginRegistrant.register(with: self)
+    // GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
