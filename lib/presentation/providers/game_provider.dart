@@ -165,8 +165,8 @@ class GameProvider extends ChangeNotifier {
       return;
     }
     
-    // Calculate real probabilities based on game state
-    final probabilityMap = _calculateRealProbabilities();
+    // Calculate simple probabilities based on game state
+    final probabilityMap = _calculateSimpleProbabilities();
     
     try {
       _fiftyFiftyCells = await Native5050Solver.find5050(probabilityMap);
@@ -177,70 +177,56 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Calculate real probabilities for 50/50 detection
-  Map<String, double> _calculateRealProbabilities() {
+  /// Calculate simple probabilities for 50/50 detection
+  Map<String, double> _calculateSimpleProbabilities() {
     final probabilityMap = <String, double>{};
     
     if (_gameState == null) return probabilityMap;
     
-    // Get all unrevealed cells
-    final unrevealedCells = <List<int>>[];
+    // Simple approach: only mark cells as 50/50 if they have exactly 2 unrevealed neighbors
+    // and are adjacent to a revealed number that needs exactly 1 more mine
     for (int row = 0; row < _gameState!.board.length; row++) {
       for (int col = 0; col < _gameState!.board[row].length; col++) {
         final cell = _gameState!.getCell(row, col);
-        if (cell.isUnrevealed && !cell.isFlagged) {
-          unrevealedCells.add([row, col]);
-        }
-      }
-    }
-    
-    // Calculate probabilities based on revealed numbers
-    for (final cellPos in unrevealedCells) {
-      final row = cellPos[0];
-      final col = cellPos[1];
-      
-      // Get revealed neighbors
-      final revealedNeighbors = _getRevealedNeighbors(row, col);
-      
-      if (revealedNeighbors.isEmpty) {
-        // No revealed neighbors, use neutral probability
-        probabilityMap['($row, $col)'] = 0.3;
-        continue;
-      }
-      
-      // Calculate probability based on revealed neighbors
-      double totalProbability = 0.0;
-      int neighborCount = 0;
-      
-      for (final neighbor in revealedNeighbors) {
-        final neighborRow = neighbor[0];
-        final neighborCol = neighbor[1];
-        final neighborCell = _gameState!.getCell(neighborRow, neighborCol);
         
-        if (neighborCell.isRevealed && neighborCell.bombsAround > 0) {
-          // Count unrevealed neighbors of this revealed cell
-          final unrevealedNeighbors = _getUnrevealedNeighbors(neighborRow, neighborCol);
-          final flaggedNeighbors = _getFlaggedNeighbors(neighborRow, neighborCol);
-          
-          if (unrevealedNeighbors.isNotEmpty) {
-            // Calculate local probability
-            final remainingMines = neighborCell.bombsAround - flaggedNeighbors.length;
-            final localProbability = remainingMines / unrevealedNeighbors.length;
-            totalProbability += localProbability;
-            neighborCount++;
+        if (cell.isUnrevealed && !cell.isFlagged) {
+          // Check if this cell is part of a potential 50/50 situation
+          final probability = _check5050Probability(row, col);
+          if (probability > 0) {
+            probabilityMap['($row, $col)'] = probability;
           }
         }
-      }
-      
-      if (neighborCount > 0) {
-        final avgProbability = totalProbability / neighborCount;
-        probabilityMap['($row, $col)'] = avgProbability;
-      } else {
-        probabilityMap['($row, $col)'] = 0.3; // Neutral probability
       }
     }
     
     return probabilityMap;
+  }
+
+  /// Check if a cell is part of a 50/50 situation
+  double _check5050Probability(int row, int col) {
+    // Get revealed neighbors
+    final revealedNeighbors = _getRevealedNeighbors(row, col);
+    
+    for (final neighbor in revealedNeighbors) {
+      final neighborRow = neighbor[0];
+      final neighborCol = neighbor[1];
+      final neighborCell = _gameState!.getCell(neighborRow, neighborCol);
+      
+      if (neighborCell.isRevealed && neighborCell.bombsAround > 0) {
+        // Count unrevealed neighbors of this revealed cell
+        final unrevealedNeighbors = _getUnrevealedNeighbors(neighborRow, neighborCol);
+        final flaggedNeighbors = _getFlaggedNeighbors(neighborRow, neighborCol);
+        
+        // Check if this is a classic 50/50: exactly 2 unrevealed neighbors, exactly 1 remaining mine
+        final remainingMines = neighborCell.bombsAround - flaggedNeighbors.length;
+        if (unrevealedNeighbors.length == 2 && remainingMines == 1) {
+          // This is a 50/50 situation
+          return 0.5;
+        }
+      }
+    }
+    
+    return 0.0; // Not a 50/50 situation
   }
 
   /// Get revealed neighbors of a cell
