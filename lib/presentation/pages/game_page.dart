@@ -106,7 +106,7 @@ class _GamePageState extends State<GamePage> {
             children: [
               // Game board
               Expanded(
-                child: GameBoard(bottomBarHeight: _bottomBarHeight),
+                child: GameBoard(),
               ),
               // Game controls
               _buildGameControls(context, gameProvider),
