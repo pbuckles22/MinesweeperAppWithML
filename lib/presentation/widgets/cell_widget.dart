@@ -31,25 +31,35 @@ class CellWidget extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return GestureDetector(
-          onTap: () {
-            if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
-              onTap();
-            }
+        return RawGestureDetector(
+          gestures: <Type, GestureRecognizerFactory>{
+            LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                LongPressGestureRecognizer>(
+              () => LongPressGestureRecognizer(
+                duration: const Duration(milliseconds: 200), // Fast flagging
+              ),
+              (LongPressGestureRecognizer instance) {
+                instance.onLongPress = () {
+                  if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
+                    HapticService.mediumImpact();
+                    onLongPress();
+                  }
+                };
+              },
+            ),
+            TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<
+                TapGestureRecognizer>(
+              () => TapGestureRecognizer(),
+              (TapGestureRecognizer instance) {
+                instance.onTap = () {
+                  if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
+                    onTap();
+                  }
+                };
+              },
+            ),
           },
-          onLongPress: () {
-            print('DEBUG: Long press detected on cell ([38;5;208m$row[0m, [38;5;208m$col[0m)');
-            print('DEBUG: Cell state: [38;5;208m${cell.state}[0m');
-            print('DEBUG: isPlaying: [38;5;208m${gameProvider.isPlaying}[0m');
-            print('DEBUG: isValidAction: [38;5;208m${gameProvider.isValidAction(row, col)}[0m');
-            if (gameProvider.isPlaying && gameProvider.isValidAction(row, col)) {
-              print('DEBUG: Executing long press action');
-              HapticService.mediumImpact();
-              onLongPress();
-            } else {
-              print('DEBUG: Long press blocked - game not playing or invalid action');
-            }
-          },
+          behavior: HitTestBehavior.opaque,
           child: Container(
             margin: const EdgeInsets.all(1.0),
             decoration: BoxDecoration(

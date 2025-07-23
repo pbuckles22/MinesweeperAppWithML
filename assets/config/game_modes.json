@@ -28,16 +28,6 @@
       "icon": "sentiment_dissatisfied"
     },
     {
-      "id": "1test",
-      "name": "1test",
-      "description": "1trrrrrr104 mines",
-      "rows": 9,
-      "columns": 9,
-      "mines": 13,
-      "enabled": true,
-      "icon": "warning"
-    },
-    {
       "id": "expert",
       "name": "Expert",
       "description": "18×24 grid, 115 mines",

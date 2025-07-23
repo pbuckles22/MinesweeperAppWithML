@@ -6,6 +6,7 @@ import '../widgets/game_board.dart';
 import '../widgets/game_over_dialog.dart';
 import 'settings_page.dart';
 import '../../core/constants.dart';
+import '../../services/timer_service.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({Key? key}) : super(key: key);
@@ -16,6 +17,10 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage> {
   bool _showGameOverDialog = false;
+
+  // Add GlobalKey and height for bottom bar
+  final GlobalKey _bottomBarKey = GlobalKey();
+  double _bottomBarHeight = 0.0;
 
   @override
   void initState() {
@@ -85,13 +90,24 @@ class _GamePageState extends State<GamePage> {
             );
           }
 
+          // Measure bottom bar height after layout
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final barContext = _bottomBarKey.currentContext;
+            final barHeight = barContext?.size?.height;
+            if (barHeight != null && barHeight != _bottomBarHeight) {
+              setState(() {
+                _bottomBarHeight = barHeight;
+              });
+              print('DEBUG: Measured real bottom bar height: $_bottomBarHeight');
+            }
+          });
+
           return Column(
             children: [
               // Game board
               Expanded(
-                child: const GameBoard(),
+                child: GameBoard(bottomBarHeight: _bottomBarHeight),
               ),
-              
               // Game controls
               _buildGameControls(context, gameProvider),
             ],
@@ -138,6 +154,7 @@ class _GamePageState extends State<GamePage> {
 
   Widget _buildGameControls(BuildContext context, GameProvider gameProvider) {
     return Container(
+      key: _bottomBarKey,
       padding: const EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -159,8 +176,6 @@ class _GamePageState extends State<GamePage> {
       ),
     );
   }
-
-
 
   @override
   void dispose() {

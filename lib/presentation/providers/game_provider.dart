@@ -21,7 +21,19 @@ class GameProvider extends ChangeNotifier {
 
   GameProvider({GameRepository? repository, TimerService? timerService}) 
       : _repository = repository ?? GameRepositoryImpl(),
-        _timerService = timerService ?? TimerService();
+        _timerService = timerService ?? TimerService() {
+    // Listen to timer changes and propagate them to UI
+    _timerService.addListener(() {
+      notifyListeners();
+    });
+  }
+
+  // Test-only setter for widget integration tests
+  @visibleForTesting
+  set testGameState(GameState state) {
+    _gameState = state;
+    notifyListeners();
+  }
 
   // Getters
   GameState? get gameState => _gameState;
@@ -86,6 +98,15 @@ class GameProvider extends ChangeNotifier {
       _setError('Failed to toggle flag: $e');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // Refresh state from repository (useful for testing)
+  void refreshState() {
+    if (_repository is GameRepositoryImpl) {
+      final repo = _repository as GameRepositoryImpl;
+      _gameState = repo.getCurrentState();
+      notifyListeners();
     }
   }
 
@@ -305,12 +326,12 @@ class GameProvider extends ChangeNotifier {
            col >= 0 && col < _gameState!.board[0].length;
   }
 
-  /// Check if a cell is in a 50/50 situation
+  // Check if a cell is in a 50/50 situation using python-based detection
   bool isCellIn5050Situation(int row, int col) {
     return _fiftyFiftyCells.any((cell) => cell[0] == row && cell[1] == col);
   }
 
-  /// Reveal a cell as a 50/50 safe move if allowed
+  // Reveal a cell as a 50/50 safe move if allowed
   Future<void> execute5050SafeMove(int row, int col) async {
     if (!FeatureFlags.enable5050SafeMove) return;
     if (!isCellIn5050Situation(row, col)) return;

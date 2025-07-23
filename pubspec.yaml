@@ -10,7 +10,7 @@ description: A new Flutter application.
 version: 1.0.0+3
 
 environment:
-  sdk: ">=2.12.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -26,9 +26,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+<<<<<<< HEAD
   integration_test:
     sdk: flutter
   mockito: ^5.4.6
+=======
+  mockito: ^5.4.4
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+>>>>>>> main
 
 
 # For information on the generic Dart part of this file, see the

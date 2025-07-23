@@ -25,6 +25,7 @@ class SettingsProvider extends ChangeNotifier {
   // Initialize settings
   SettingsProvider() {
     _loadSettings();
+    notifyListeners(); // Ensure listeners are notified after loading settings
   }
 
   // Toggle first click guarantee (Classic vs Kickstarter mode)
@@ -104,15 +105,15 @@ class SettingsProvider extends ChangeNotifier {
     // We don't need to set them again here
     
     // Debug logging
-    print('DEBUG: SettingsProvider._loadSettings - Loaded settings from JSON:');
-    print('DEBUG:   Kickstarter mode: $_isFirstClickGuaranteeEnabled');
-    print('DEBUG:   50/50 detection: $_is5050DetectionEnabled');
-    print('DEBUG:   50/50 safe move: $_is5050SafeMoveEnabled');
-    print('DEBUG:   Difficulty: $_selectedDifficulty');
-    print('DEBUG:   FeatureFlags (already set in main.dart):');
-    print('DEBUG:     enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
-    print('DEBUG:     enable5050Detection: ${FeatureFlags.enable5050Detection}');
-    print('DEBUG:     enable5050SafeMove: ${FeatureFlags.enable5050SafeMove}');
+    // print('DEBUG: SettingsProvider._loadSettings - Loaded settings from JSON:');
+    // print('DEBUG:   Kickstarter mode: $_isFirstClickGuaranteeEnabled');
+    // print('DEBUG:   50/50 detection: $_is5050DetectionEnabled');
+    // print('DEBUG:   50/50 safe move: $_is5050SafeMoveEnabled');
+    // print('DEBUG:   Difficulty: $_selectedDifficulty');
+    // print('DEBUG:   FeatureFlags (already set in main.dart):');
+    // print('DEBUG:     enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
+    // print('DEBUG:     enable5050Detection: ${FeatureFlags.enable5050Detection}');
+    // print('DEBUG:     enable5050SafeMove: ${FeatureFlags.enable5050SafeMove}');
   }
 
   // Save settings to storage (placeholder for now)

@@ -5,6 +5,7 @@ import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/data/repositories/game_repository_impl.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
 import 'package:flutter_minesweeper/core/feature_flags.dart';
+import 'package:flutter_minesweeper/services/timer_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -62,8 +63,20 @@ void main() {
     group('Cell Revealing', () {
       test('should reveal cell when not flagged', () async {
         final gameState = await repository.initializeGame('easy');
-        final result = await repository.revealCell(0, 0);
-        expect(result.getCell(0, 0).isRevealed, isTrue);
+        // Find a cell that is not a mine
+        int safeRow = -1, safeCol = -1;
+        for (int row = 0; row < gameState.rows; row++) {
+          for (int col = 0; col < gameState.columns; col++) {
+            if (!gameState.getCell(row, col).hasBomb) {
+              safeRow = row;
+              safeCol = col;
+              break;
+            }
+          }
+          if (safeRow != -1) break;
+        }
+        final result = await repository.revealCell(safeRow, safeCol);
+        expect(result.getCell(safeRow, safeCol).isRevealed, isTrue);
       });
 
       test('should not reveal flagged cell', () async {

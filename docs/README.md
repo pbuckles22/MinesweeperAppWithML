@@ -11,6 +11,7 @@ A modern, feature-rich Minesweeper clone built with Flutter, featuring robust ga
 - **Multiple Difficulty Levels** - Easy, Normal, Hard, Expert, and Custom modes
 - **First Click Guarantee** - Kickstarter mode ensures your first click always reveals a cascade
 - **Visual Feedback** - Clear distinction between different cell states when game ends
+- **Smart Timer** - Continuous timer that pauses when app goes to background, resumes when returning to foreground
 
 ### Enhanced UX
 - **Zoom Controls** - Pinch to zoom and pan around large boards
@@ -18,6 +19,7 @@ A modern, feature-rich Minesweeper clone built with Flutter, featuring robust ga
 - **Auto-Generated Descriptions** - Game mode descriptions automatically generated from grid dimensions
 - **Educational Tooltips** - Help icons explain game modes and features
 - **Consistent Settings** - All game-affecting changes auto-close settings and restart game
+- **Battery-Efficient Timer** - Timer only runs when app is active, saving battery life
 
 ### Game Modes
 - **Classic Mode** - Traditional Minesweeper with random first-click behavior
@@ -90,9 +92,10 @@ lib/
 ### Key Features
 - **Clean Architecture** - Separation of concerns with clear layers
 - **Feature Flags** - Easy toggling of experimental features
-- **Comprehensive Testing** - 43+ tests covering all game logic
+- **Comprehensive Testing** - 260tests covering all game logic, integration scenarios, and performance validation
 - **Configuration Validation** - Compile-time validation of game modes
 - **Null Safety** - Full Dart null safety compliance
+- **App Lifecycle Management** - Timer and state management for background/foreground transitions
 
 ## 🐛 Bug Reports & Feature Requests
 
@@ -128,4 +131,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **50/50 Situation Detection** - Detects classic and shared constraint 50/50 scenarios, with scenario-based tests for each known pattern
 - **Flag Toggle Logic** - Long-press toggles flags on unrevealed cells, matching classic Minesweeper behavior
-- **Test Coverage** - 123+ tests covering all core game logic, edge cases, and advanced scenarios
+- **Test Coverage** - 237+ tests covering all core game logic, edge cases, integration scenarios, and performance validation
+- **Smart Timer System** - Battery-efficient timer with app lifecycle awareness

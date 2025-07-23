@@ -260,6 +260,10 @@ final board = [
 
 ---
 
+
+
+---
+
 ## Classic 50/50 Detection Logic Update
 - Classic 50/50 detection **no longer requires candidate cells to be "blocked"** (i.e., only constrained by one revealed cell).
 - Any revealed numbered cell with exactly 2 unrevealed neighbors and exactly 1 remaining mine will be detected as a classic 50/50, even if those cells have other revealed neighbors.
