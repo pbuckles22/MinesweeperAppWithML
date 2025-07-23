@@ -16,44 +16,178 @@ class GameBoard extends StatefulWidget {
 class _GameBoardState extends State<GameBoard> {
   double _zoomLevel = 1.0;
   static const double _minZoom = 1.0; // 100%
-  static const double _maxZoom = 2.0; // Changed from 3.0 to 2.0 (200%)
+  static const double _maxZoom = 2.0; // 200%
   static const double _zoomStep = 0.1;
-  static const double _baseCellSize = 40.0;
+
+  final GlobalKey _boardKey = GlobalKey();
+  final GlobalKey _firstCellKey = GlobalKey();
+  double? _cellSize;
+  bool _postLayoutAdjusted = false;
+  double? _lastAvailableHeight;
+  int? _lastRows;
+  int? _lastColumns;
+  static const double _epsilon = 0.5; // Acceptable pixel error
+
+  void _debugBoardAndCellSize(int rows, int columns, double expectedCellSize) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final boardContext = _boardKey.currentContext;
+      final cellContext = _firstCellKey.currentContext;
+      if (boardContext != null) {
+        final boardBox = boardContext.findRenderObject() as RenderBox?;
+        if (boardBox != null) {
+          final boardSize = boardBox.size;
+          print('DEBUG: Board rendered size: ${boardSize.width} x ${boardSize.height}');
+          print('DEBUG: Board expected height: ${expectedCellSize * rows + (rows - 1) * 2.0 * _zoomLevel}');
+          print('DEBUG: Board height diff: ${boardSize.height - (expectedCellSize * rows + (rows - 1) * 2.0 * _zoomLevel)}');
+        }
+      }
+      if (cellContext != null) {
+        final cellBox = cellContext.findRenderObject() as RenderBox?;
+        if (cellBox != null) {
+          final cellSize = cellBox.size;
+          print('DEBUG: First cell rendered size: ${cellSize.width} x ${cellSize.height}');
+          print('DEBUG: Expected cell size: $expectedCellSize');
+          print('DEBUG: Cell height diff: ${cellSize.height - expectedCellSize}');
+        }
+      }
+    });
+  }
+
+  void _maybeAdjustCellSize(int rows, double availableHeight, double spacing) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final boardContext = _boardKey.currentContext;
+      if (boardContext != null) {
+        final boardBox = boardContext.findRenderObject() as RenderBox?;
+        if (boardBox != null) {
+          final actualHeight = boardBox.size.height;
+          final expectedHeight = _cellSize! * rows + (rows - 1) * spacing;
+          final diff = actualHeight - availableHeight;
+          // Only adjust if the difference is significant
+          if ((diff).abs() > _epsilon && !_postLayoutAdjusted) {
+            final correctedCellSize = (availableHeight - (rows - 1) * spacing) / rows;
+            setState(() {
+              _cellSize = correctedCellSize;
+              _postLayoutAdjusted = true;
+            });
+          } else if ((diff).abs() <= _epsilon && _postLayoutAdjusted) {
+            // Reset for next game/board
+            setState(() {
+              _postLayoutAdjusted = false;
+            });
+          }
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<GameProvider>(
       builder: (context, gameProvider, child) {
         final gameState = gameProvider.gameState;
-        
         if (gameState == null) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
-
+        final rows = gameState.rows;
+        final columns = gameState.columns;
+        // Reset cell size and adjustment if board size or available height changes
+        final shouldReset = _lastRows != rows || _lastColumns != columns || _lastAvailableHeight != null && _lastAvailableHeight != MediaQuery.of(context).size.height;
+        if (shouldReset) {
+          _cellSize = null;
+          _postLayoutAdjusted = false;
+          _lastRows = rows;
+          _lastColumns = columns;
+          _lastAvailableHeight = MediaQuery.of(context).size.height;
+        }
         return Column(
           children: [
-            // Game header with stats
-            Container(
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
-                  child: _buildGameHeader(context, gameProvider),
-                ),
-              ),
-            ),
-            
-            // Game board with zoom - constrained to available space
+            _buildGameHeader(context, gameProvider),
             Expanded(
-              child: Container(
-                child: _buildBoardWithZoom(context, gameProvider, gameState),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight = constraints.maxHeight;
+                  final spacing = 2.0 * _zoomLevel;
+                  final cellSize = _cellSize ?? (availableHeight - (rows - 1) * spacing) / rows;
+                  final boardHeight = cellSize * rows + (rows - 1) * spacing;
+                  final boardWidth = columns * cellSize + (columns - 1) * spacing;
+                  // Feedback loop: measure and adjust after first layout
+                  if (_cellSize == null || !_postLayoutAdjusted) {
+                    _cellSize = cellSize;
+                    _maybeAdjustCellSize(rows, availableHeight, spacing);
+                  }
+                  print('DEBUG: LayoutBuilder availableHeight: $availableHeight');
+                  print('DEBUG: Calculated cellSize: $cellSize');
+                  print('DEBUG: Calculated boardHeight: $boardHeight');
+                  print('DEBUG: Calculated boardWidth: $boardWidth');
+                  _debugBoardAndCellSize(rows, columns, cellSize);
+                  Widget grid = Container(
+                    key: _boardKey,
+                    width: boardWidth,
+                    height: boardHeight,
+                    color: Colors.blue.withOpacity(0.05), // Visual debug
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        childAspectRatio: 1.0,
+                        mainAxisSpacing: spacing,
+                        crossAxisSpacing: spacing,
+                      ),
+                      itemCount: rows * columns,
+                      itemBuilder: (context, index) {
+                        final row = index ~/ columns;
+                        final col = index % columns;
+                        final cellKey = (index == 0) ? _firstCellKey : null;
+                        return SizedBox(
+                          key: cellKey,
+                          width: cellSize,
+                          height: cellSize,
+                          child: CellWidget(
+                            row: row,
+                            col: col,
+                            onTap: () {
+                              final is5050Cell = gameProvider.isCellIn5050Situation(row, col);
+                              final is5050SafeMoveEnabled = FeatureFlags.enable5050SafeMove;
+                              if (is5050Cell && is5050SafeMoveEnabled) {
+                                gameProvider.execute5050SafeMove(row, col);
+                              } else {
+                                gameProvider.revealCell(row, col);
+                              }
+                            },
+                            onLongPress: () {
+                              gameProvider.toggleFlag(row, col);
+                              _debugBoardAndCellSize(rows, columns, cellSize);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                  // If the board is taller than the available height, allow vertical scrolling
+                  if (boardHeight > availableHeight + 0.5) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: grid,
+                      ),
+                    );
+                  } else {
+                    // No vertical scroll, only horizontal if needed
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: grid,
+                    );
+                  }
+                },
               ),
             ),
-            
-            // Zoom controls - directly above bottom bar
             Container(
-              child: _buildZoomControls(context),
+              height: 60.0,
+              child: Center(
+                child: _buildZoomControls(context),
+              ),
             ),
           ],
         );
@@ -66,7 +200,7 @@ class _GameBoardState extends State<GameBoard> {
     final stats = gameProvider.getGameStatistics();
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5.0),
+      padding: const EdgeInsets.all(16.0),
       color: Theme.of(context).colorScheme.surface,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,97 +281,8 @@ class _GameBoardState extends State<GameBoard> {
     );
   }
 
-  Widget _buildBoardWithZoom(BuildContext context, GameProvider gameProvider, GameState gameState) {
-    // Use consistent cell size across all difficulties
-    const double baseCellSize = 40.0; // Standard cell size for all difficulties
-    
-    final cellSize = baseCellSize * _zoomLevel;
-    final spacing = 2.0 * _zoomLevel; // Scale spacing with zoom level
-    
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onScaleStart: (details) {
-        // Only handle multi-touch gestures for zoom
-        if (details.pointerCount > 1) {
-          // Store initial zoom level for pinch gesture
-        }
-      },
-      onScaleUpdate: (details) {
-        // Only handle multi-touch gestures for zoom
-        if (details.pointerCount > 1 && details.scale != 1.0) {
-          setState(() {
-            // Use a much smaller scale factor for pinch gestures to make it less sensitive
-            // Fix zoom out by properly handling scale < 1.0
-            double scaleFactor;
-            if (details.scale > 1.0) {
-              scaleFactor = 1.005; // Zoom in
-            } else {
-              scaleFactor = 0.995; // Zoom out
-            }
-            _zoomLevel = (_zoomLevel * scaleFactor).clamp(_minZoom, _maxZoom);
-          });
-        }
-      },
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SingleChildScrollView(
-          child: Container(
-            width: gameState.columns * cellSize + (gameState.columns - 1) * spacing,
-            height: gameState.rows * cellSize + (gameState.rows - 1) * spacing,
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(8.0),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: gameState.columns,
-                childAspectRatio: 1.0,
-                mainAxisSpacing: spacing,
-                crossAxisSpacing: spacing,
-              ),
-              itemCount: gameState.rows * gameState.columns,
-              itemBuilder: (context, index) {
-                final row = index ~/ gameState.columns;
-                final col = index % gameState.columns;
-                
-                return SizedBox(
-                  width: cellSize,
-                  height: cellSize,
-                  child: CellWidget(
-                    row: row,
-                    col: col,
-                    onTap: () {
-                      // Check if this is a 50/50 cell and safe move is enabled
-                      final is5050Cell = gameProvider.isCellIn5050Situation(row, col);
-                      final is5050SafeMoveEnabled = FeatureFlags.enable5050SafeMove;
-                      
-                      print('DEBUG: GameBoard onTap - Cell ($row,$col):');
-                      print('DEBUG:   isCellIn5050Situation: $is5050Cell');
-                      print('DEBUG:   enable5050SafeMove: $is5050SafeMoveEnabled');
-                      print('DEBUG:   FeatureFlags.enable5050Detection: ${FeatureFlags.enable5050Detection}');
-                      
-                      if (is5050Cell && is5050SafeMoveEnabled) {
-                        print('DEBUG: GameBoard onTap - Executing 50/50 safe move');
-                        gameProvider.execute5050SafeMove(row, col);
-                      } else {
-                        print('DEBUG: GameBoard onTap - Executing normal reveal');
-                        gameProvider.revealCell(row, col);
-                      }
-                    },
-                    onLongPress: () => gameProvider.toggleFlag(row, col),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildStatCard(BuildContext context, String label, String value, IconData icon) {
     return Card(
-      color: Colors.transparent, // Make card background transparent
-      elevation: 0, // Remove shadow
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: Column(
