@@ -6,9 +6,14 @@ import 'package:flutter_minesweeper/presentation/pages/settings_page.dart';
 import 'package:flutter_minesweeper/presentation/providers/game_provider.dart';
 import 'package:flutter_minesweeper/presentation/providers/settings_provider.dart';
 import 'package:flutter_minesweeper/presentation/pages/game_page.dart';
+import 'package:flutter_minesweeper/core/feature_flags.dart';
 
 void main() {
   group('Main App Integration Tests', () {
+    setUpAll(() {
+      // Enable test mode to prevent native solver calls during tests
+      FeatureFlags.enableTestMode = true;
+    });
     testWidgets('should launch app and show main game screen', (WidgetTester tester) async {
       await tester.pumpWidget(const MinesweeperApp());
       await tester.pumpAndSettle();

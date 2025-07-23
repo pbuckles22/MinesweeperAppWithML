@@ -16,6 +16,8 @@ void main() {
     late SettingsProvider settingsProvider;
 
     setUpAll(() async {
+      // Enable test mode to prevent native solver calls during tests
+      FeatureFlags.enableTestMode = true;
       // Load game mode configuration before running tests
       await GameModeConfig.instance.loadGameModes();
     });

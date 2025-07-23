@@ -7,10 +7,13 @@ import 'package:flutter_minesweeper/presentation/providers/game_provider.dart';
 import 'package:flutter_minesweeper/presentation/providers/settings_provider.dart';
 import 'package:flutter_minesweeper/domain/entities/game_state.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
+import 'package:flutter_minesweeper/core/feature_flags.dart';
 
 void main() {
   group('End-to-End Game Flow Integration Tests', () {
     setUpAll(() async {
+      // Enable test mode to prevent native solver calls during tests
+      FeatureFlags.enableTestMode = true;
       await GameModeConfig.instance.loadGameModes();
     });
 

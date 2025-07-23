@@ -6,6 +6,11 @@ import 'package:flutter_minesweeper/core/feature_flags.dart';
 
 void main() {
   group('Game Logic Integration Tests', () {
+    setUpAll(() {
+      // Enable test mode to prevent native solver calls during tests
+      FeatureFlags.enableTestMode = true;
+    });
+
     late GameRepositoryImpl repository;
 
     setUp(() {
