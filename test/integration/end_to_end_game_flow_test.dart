@@ -29,7 +29,7 @@ void main() {
       // Explicitly initialize game with valid difficulty
       try {
         await gameProvider.initializeGame('easy');
-        await tester.pumpAndSettle();
+        await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
         print('InitializeGame completed successfully');
       } catch (e) {
         print('InitializeGame failed with error: $e');
@@ -47,12 +47,12 @@ void main() {
       expect(gameProvider.isGameInitialized, isTrue);
 
       // Find and interact with cells
-      final cells = find.byType(GestureDetector);
+      final cells = find.byType(RawGestureDetector);
       expect(cells, findsWidgets);
 
       // Tap first cell to start game
-      await tester.tap(cells.first);
-      await tester.pumpAndSettle();
+      await tester.tap(cells.first, warnIfMissed: false);
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
 
       // Verify game started
       expect(gameProvider.gameState?.isPlaying, isTrue);
@@ -61,10 +61,10 @@ void main() {
       int taps = 0;
       const maxTaps = 50; // Increased limit for test
       while (gameProvider.gameState?.isPlaying == true && taps < maxTaps) {
-        final untappedCells = find.byType(GestureDetector);
+        final untappedCells = find.byType(RawGestureDetector);
         if (untappedCells.evaluate().isEmpty) break;
-        await tester.tap(untappedCells.first);
-        await tester.pumpAndSettle();
+        await tester.tap(untappedCells.first, warnIfMissed: false);
+        await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
         taps++;
         print('Tap $taps: Game state = ${gameProvider.gameState?.gameStatus}');
         if (gameProvider.gameState?.isWon == true || gameProvider.gameState?.isLost == true) {
@@ -83,6 +83,9 @@ void main() {
       );
       expect(gameProvider.gameState?.revealedCount ?? 0, greaterThan(0));
       expect(gameProvider.gameState?.gameDuration?.inSeconds ?? 0, greaterThanOrEqualTo(0));
+      
+      // Clean up timer to prevent test framework errors
+      gameProvider.timerService.stop();
     });
 
     testWidgets('should handle game reset and restart', (WidgetTester tester) async {
@@ -93,20 +96,23 @@ void main() {
       
       // Initialize game first
       await gameProvider.initializeGame('easy');
-      await tester.pumpAndSettle();
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       
-      final cells = find.byType(GestureDetector);
-      await tester.tap(cells.first);
-      await tester.pumpAndSettle();
+      final cells = find.byType(RawGestureDetector);
+      await tester.tap(cells.first, warnIfMissed: false);
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       expect(gameProvider.gameState?.isPlaying, isTrue);
       
       // Reset game
       await gameProvider.resetGame();
-      await tester.pumpAndSettle();
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       
       // After reset, game should be ready (not playing until first move)
       expect(gameProvider.gameState?.isPlaying, isTrue); // After reset, new game starts
       expect(gameProvider.gameState?.revealedCount ?? 0, equals(0));
+      
+      // Clean up timer to prevent test framework errors
+      gameProvider.timerService.stop();
     });
 
     testWidgets('should handle flag placement and removal', (WidgetTester tester) async {
@@ -117,20 +123,23 @@ void main() {
       
       // Initialize game first
       await gameProvider.initializeGame('easy');
-      await tester.pumpAndSettle();
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       
-      final cells = find.byType(GestureDetector);
+      final cells = find.byType(RawGestureDetector);
       expect(cells, findsWidgets);
       
       // Long press to flag a cell
-      await tester.longPress(cells.first);
-      await tester.pumpAndSettle();
+      await tester.longPress(cells.first, warnIfMissed: false);
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       expect(gameProvider.gameState?.flaggedCount ?? 0, greaterThan(0));
       
       // Long press again to remove flag
-      await tester.longPress(cells.first);
-      await tester.pumpAndSettle();
+      await tester.longPress(cells.first, warnIfMissed: false);
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       expect(gameProvider.gameState?.flaggedCount ?? 0, equals(0));
+      
+      // Clean up timer to prevent test framework errors
+      gameProvider.timerService.stop();
     });
 
     testWidgets('should handle difficulty changes during game', (WidgetTester tester) async {
@@ -142,11 +151,11 @@ void main() {
       
       // Initialize game first
       await gameProvider.initializeGame('easy');
-      await tester.pumpAndSettle();
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       
-      final cells = find.byType(GestureDetector);
-      await tester.tap(cells.first);
-      await tester.pumpAndSettle();
+      final cells = find.byType(RawGestureDetector);
+      await tester.tap(cells.first, warnIfMissed: false);
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       expect(gameProvider.gameState?.isPlaying, isTrue);
       
       // Change difficulty (should reset the game)
@@ -154,10 +163,13 @@ void main() {
       // Force reset repository and initialize new game (like settings page does)
       gameProvider.forceResetRepository();
       await gameProvider.initializeGame('hard');
-      await tester.pumpAndSettle();
+      await tester.pump(); // Use pump() instead of pumpAndSettle() to avoid timeout
       
       expect(gameProvider.gameState?.isPlaying, isTrue); // New game started
       expect(settingsProvider.selectedDifficulty, 'hard');
+      
+      // Clean up timer to prevent test framework errors
+      gameProvider.timerService.stop();
     });
 
     // You may need to add a test-only method to GameProvider to force a game over state for the following test

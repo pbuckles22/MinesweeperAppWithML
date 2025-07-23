@@ -52,8 +52,25 @@
     "game_mode": "hard",
     "features": {
       "kickstarter_mode": true,
-      "5050_detection": true,
-      "5050_safe_move": true
+      "5050_detection": false,
+      "5050_safe_move": true,
+      "game_statistics": true,
+      "board_reset": false,
+      "custom_difficulty": false,
+      "undo_move": false,
+      "hint_system": false,
+      "auto_flag": false,
+      "best_times": false,
+      "dark_mode": false,
+      "animations": false,
+      "sound_effects": false,
+      "haptic_feedback": true,
+      "ml_assistance": false,
+      "auto_play": false,
+      "difficulty_prediction": false,
+      "debug_mode": false,
+      "performance_metrics": false,
+      "test_mode": false
     }
   }
 } 

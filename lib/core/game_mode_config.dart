@@ -66,6 +66,9 @@ class GameModeConfig {
   static bool _default5050Detection = false;
   static bool _default5050SafeMove = false;
 
+  // Store all feature flag defaults
+  static Map<String, bool> _defaultFeatureFlags = {};
+
   GameModeConfig._() {
     // Validate configuration immediately when instance is created
     _validateConfiguration();
@@ -135,6 +138,8 @@ class GameModeConfig {
           _defaultKickstarterMode = features['kickstarter_mode'] as bool? ?? false;
           _default5050Detection = features['5050_detection'] as bool? ?? false;
           _default5050SafeMove = features['5050_safe_move'] as bool? ?? false;
+          // Store all feature flags
+          _defaultFeatureFlags = features.map((k, v) => MapEntry(k, v as bool? ?? false));
         }
       } else {
         // Fallback to old structure
@@ -243,6 +248,25 @@ class GameModeConfig {
   bool get defaultKickstarterMode => _defaultKickstarterMode;
   bool get default5050Detection => _default5050Detection;
   bool get default5050SafeMove => _default5050SafeMove;
+
+  // --- New: Explicit getters for all user-facing feature flags ---
+  bool get defaultUndoMove => _defaultFeatureFlags['undo_move'] ?? false;
+  bool get defaultHintSystem => _defaultFeatureFlags['hint_system'] ?? false;
+  bool get defaultAutoFlag => _defaultFeatureFlags['auto_flag'] ?? false;
+  bool get defaultBoardReset => _defaultFeatureFlags['board_reset'] ?? false;
+  bool get defaultCustomDifficulty => _defaultFeatureFlags['custom_difficulty'] ?? false;
+  bool get defaultGameStatistics => _defaultFeatureFlags['game_statistics'] ?? true;
+  bool get defaultBestTimes => _defaultFeatureFlags['best_times'] ?? false;
+  bool get defaultDarkMode => _defaultFeatureFlags['dark_mode'] ?? false;
+  bool get defaultAnimations => _defaultFeatureFlags['animations'] ?? false;
+  bool get defaultSoundEffects => _defaultFeatureFlags['sound_effects'] ?? false;
+  bool get defaultHapticFeedback => _defaultFeatureFlags['haptic_feedback'] ?? true;
+  bool get defaultMLAssistance => _defaultFeatureFlags['ml_assistance'] ?? false;
+  bool get defaultAutoPlay => _defaultFeatureFlags['auto_play'] ?? false;
+  bool get defaultDifficultyPrediction => _defaultFeatureFlags['difficulty_prediction'] ?? false;
+
+  /// Get all feature flag defaults as a map
+  Map<String, bool> get defaultFeatureFlags => Map.unmodifiable(_defaultFeatureFlags);
 
   /// Check if a game mode exists
   bool hasGameMode(String id) => getGameMode(id) != null;

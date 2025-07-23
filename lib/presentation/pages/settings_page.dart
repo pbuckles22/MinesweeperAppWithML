@@ -23,41 +23,27 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             children: [
               // Game Mode Section
-              _buildSectionHeader(context, 'Game Mode'),
+              _buildSectionHeader(context, 'General Gameplay'),
               const SizedBox(height: 8),
-              
-              // First Click Guarantee Toggle
               _buildGameModeToggle(context, settingsProvider),
-              const SizedBox(height: 16),
-              
-              // Mode Description
-              _buildModeDescription(context, settingsProvider),
-              const SizedBox(height: 24),
-              
-              // 50/50 Detection Section
-              _buildSectionHeader(context, 'Advanced Features'),
               const SizedBox(height: 8),
-              
-              // 50/50 Detection Toggle
-              _build5050DetectionToggle(context, settingsProvider),
-              const SizedBox(height: 8),
-              
-              // 50/50 Safe Move Toggle
-              _build5050SafeMoveToggle(context, settingsProvider),
-              const SizedBox(height: 16),
-              
-              // 50/50 Description
-              _build5050Description(context, settingsProvider),
+              _buildGeneralGameplayToggles(context, settingsProvider),
               const SizedBox(height: 24),
-              
+              // Appearance & UX Section
+              _buildSectionHeader(context, 'Appearance & UX'),
+              const SizedBox(height: 8),
+              _buildAppearanceToggles(context, settingsProvider),
+              const SizedBox(height: 24),
+              // Advanced/Experimental Section
+              _buildSectionHeader(context, 'Advanced / Experimental'),
+              const SizedBox(height: 8),
+              _buildAdvancedToggles(context, settingsProvider),
+              const SizedBox(height: 24),
               // Board Size Section
               _buildSectionHeader(context, 'Board Size'),
               const SizedBox(height: 8),
-              
-              // Difficulty Selection
               _buildDifficultySelection(context, settingsProvider),
               const SizedBox(height: 24),
-              
               // Reset to Defaults
               _buildResetButton(context, settingsProvider),
             ],
@@ -408,6 +394,7 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildDifficultySelection(BuildContext context, SettingsProvider settingsProvider) {
     return Card(
+      key: const Key('difficulty-section'),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -574,6 +561,7 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildResetButton(BuildContext context, SettingsProvider settingsProvider) {
     return Card(
+      key: const Key('reset-button'),
       elevation: 1,
       child: ListTile(
         leading: const Icon(Icons.restore),
@@ -607,6 +595,196 @@ class SettingsPage extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  // --- New Section: General Gameplay Toggles ---
+  Widget _buildGeneralGameplayToggles(BuildContext context, SettingsProvider settingsProvider) {
+    return Column(
+      children: [
+        _buildSimpleToggle(
+          context,
+          'Undo Move',
+          'Enable undoing your last move',
+          settingsProvider.isUndoMoveEnabled,
+          settingsProvider.toggleUndoMove,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Hint System',
+          'Show hints for possible safe moves',
+          settingsProvider.isHintSystemEnabled,
+          settingsProvider.toggleHintSystem,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Auto-Flag',
+          'Automatically flag obvious mines',
+          settingsProvider.isAutoFlagEnabled,
+          settingsProvider.toggleAutoFlag,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Board Reset',
+          'Allow resetting the board mid-game',
+          settingsProvider.isBoardResetEnabled,
+          settingsProvider.toggleBoardReset,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Custom Difficulty',
+          'Enable custom board size and mine count',
+          settingsProvider.isCustomDifficultyEnabled,
+          settingsProvider.toggleCustomDifficulty,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Game Statistics',
+          'Show timer and statistics',
+          settingsProvider.isGameStatisticsEnabled,
+          settingsProvider.toggleGameStatistics,
+          disabled: false,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Best Times',
+          'Track and display best times',
+          settingsProvider.isBestTimesEnabled,
+          settingsProvider.toggleBestTimes,
+          disabled: true,
+        ),
+      ],
+    );
+  }
+
+  // --- New Section: Appearance & UX Toggles ---
+  Widget _buildAppearanceToggles(BuildContext context, SettingsProvider settingsProvider) {
+    return Column(
+      children: [
+        _buildSimpleToggle(
+          context,
+          'Dark Mode',
+          'Enable dark theme',
+          settingsProvider.isDarkModeEnabled,
+          settingsProvider.toggleDarkMode,
+          disabled: false,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Animations',
+          'Enable smooth animations',
+          settingsProvider.isAnimationsEnabled,
+          settingsProvider.toggleAnimations,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Sound Effects',
+          'Enable sound effects',
+          settingsProvider.isSoundEffectsEnabled,
+          settingsProvider.toggleSoundEffects,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Haptic Feedback',
+          'Enable vibration/haptic feedback',
+          settingsProvider.isHapticFeedbackEnabled,
+          settingsProvider.toggleHapticFeedback,
+          disabled: false,
+        ),
+      ],
+    );
+  }
+
+  // --- New Section: Advanced/Experimental Toggles ---
+  Widget _buildAdvancedToggles(BuildContext context, SettingsProvider settingsProvider) {
+    return Column(
+      children: [
+        _build5050DetectionToggle(context, settingsProvider),
+        _build5050SafeMoveToggle(context, settingsProvider),
+        _buildSimpleToggle(
+          context,
+          'ML Assistance',
+          'Enable machine learning assistance',
+          settingsProvider.isMLAssistanceEnabled,
+          settingsProvider.toggleMLAssistance,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Auto-Play',
+          'Automatically play the game',
+          settingsProvider.isAutoPlayEnabled,
+          settingsProvider.toggleAutoPlay,
+          disabled: true,
+        ),
+        _buildSimpleToggle(
+          context,
+          'Difficulty Prediction',
+          'Predict difficulty using AI',
+          settingsProvider.isDifficultyPredictionEnabled,
+          settingsProvider.toggleDifficultyPrediction,
+          disabled: true,
+        ),
+      ],
+    );
+  }
+
+  // --- Helper for simple toggles ---
+  Widget _buildSimpleToggle(
+    BuildContext context,
+    String title,
+    String subtitle,
+    bool value,
+    void Function() onToggle,
+    {bool disabled = false}
+  ) {
+    return Tooltip(
+      message: disabled ? 'This feature is not yet implemented.' : '',
+      child: Card(
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: disabled ? Theme.of(context).disabledColor : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: value,
+                onChanged: disabled ? null : (_) => onToggle(),
+                activeColor: Theme.of(context).colorScheme.primary,
+                inactiveThumbColor: disabled ? Theme.of(context).disabledColor : null,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

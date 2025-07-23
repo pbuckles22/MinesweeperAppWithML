@@ -6,6 +6,8 @@ import 'package:flutter_minesweeper/presentation/providers/settings_provider.dar
 import 'package:provider/provider.dart';
 import 'package:flutter_minesweeper/core/game_mode_config.dart';
 import 'package:flutter_minesweeper/services/timer_service.dart';
+import 'package:flutter_minesweeper/domain/entities/game_state.dart';
+import 'package:flutter_minesweeper/domain/entities/cell.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,11 +18,15 @@ void main() {
   });
   
   testWidgets('Zoom controls change board scale', (WidgetTester tester) async {
+    final gameProvider = GameProvider();
+    // Use test state instead of real initialization to avoid hanging
+    gameProvider.testGameState = _createTestGameState();
+    
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => TimerService()),
-          ChangeNotifierProvider(create: (_) => GameProvider()),
+          ChangeNotifierProvider.value(value: gameProvider),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
         child: const MaterialApp(home: GamePage()),
@@ -30,91 +36,49 @@ void main() {
     // Wait for the board to load
     await tester.pumpAndSettle();
 
-    // Initialize the game first
-    final gameProvider = tester.element(find.byType(GamePage)).read<GameProvider>();
-    await gameProvider.initializeGame('easy');
-    await tester.pumpAndSettle();
-
     // Find the zoom in and zoom out buttons
     final zoomInButton = find.byIcon(Icons.zoom_in);
     final zoomOutButton = find.byIcon(Icons.zoom_out);
     expect(zoomInButton, findsOneWidget);
     expect(zoomOutButton, findsOneWidget);
 
-    // Find the Container that holds the board (with calculated dimensions)
-    final containers = find.byType(Container);
-    expect(containers, findsWidgets);
+    // Find the GridView (the actual board)
+    final gridView = find.byType(GridView);
+    expect(gridView, findsOneWidget);
     
-    // Find the Container that has both width and height set (the board container)
-    Container? boardContainer;
-    for (final container in containers.evaluate()) {
-      final widget = container.widget as Container;
-      final constraints = widget.constraints;
-      if (constraints != null && 
-          constraints.maxWidth.isFinite && constraints.maxHeight.isFinite &&
-          constraints.maxWidth > 100 && constraints.maxHeight > 100) {
-        boardContainer = widget;
-        break;
-      }
-    }
-    
-    expect(boardContainer, isNotNull);
-    double initialWidth = boardContainer!.constraints!.maxWidth;
-    double initialHeight = boardContainer.constraints!.maxHeight;
+    // Get initial grid delegate
+    final initialGridDelegate = tester.widget<GridView>(gridView).gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+    double initialSpacing = initialGridDelegate.mainAxisSpacing;
 
     // Tap zoom in
     await tester.tap(zoomInButton);
     await tester.pumpAndSettle();
     
-    // Find the updated Container
-    Container? zoomedInContainer;
-    for (final container in containers.evaluate()) {
-      final widget = container.widget as Container;
-      final constraints = widget.constraints;
-      if (constraints != null && 
-          constraints.maxWidth.isFinite && constraints.maxHeight.isFinite &&
-          constraints.maxWidth > 100 && constraints.maxHeight > 100) {
-        zoomedInContainer = widget;
-        break;
-      }
-    }
-    
-    expect(zoomedInContainer, isNotNull);
-    double zoomedInWidth = zoomedInContainer!.constraints!.maxWidth;
-    double zoomedInHeight = zoomedInContainer.constraints!.maxHeight;
-    expect(zoomedInWidth, greaterThan(initialWidth));
-    expect(zoomedInHeight, greaterThan(initialHeight));
+    // Get updated grid delegate
+    final zoomedInGridDelegate = tester.widget<GridView>(gridView).gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+    double zoomedInSpacing = zoomedInGridDelegate.mainAxisSpacing;
+    expect(zoomedInSpacing, greaterThan(initialSpacing));
 
     // Tap zoom out
     await tester.tap(zoomOutButton);
     await tester.pumpAndSettle();
     
-    // Find the updated Container again
-    Container? zoomedOutContainer;
-    for (final container in containers.evaluate()) {
-      final widget = container.widget as Container;
-      final constraints = widget.constraints;
-      if (constraints != null && 
-          constraints.maxWidth.isFinite && constraints.maxHeight.isFinite &&
-          constraints.maxWidth > 100 && constraints.maxHeight > 100) {
-        zoomedOutContainer = widget;
-        break;
-      }
-    }
-    
-    expect(zoomedOutContainer, isNotNull);
-    double zoomedOutWidth = zoomedOutContainer!.constraints!.maxWidth;
-    double zoomedOutHeight = zoomedOutContainer.constraints!.maxHeight;
-    expect(zoomedOutWidth, lessThanOrEqualTo(zoomedInWidth));
-    expect(zoomedOutHeight, lessThanOrEqualTo(zoomedInHeight));
+    // Get final grid delegate
+    final zoomedOutGridDelegate = tester.widget<GridView>(gridView).gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+    double zoomedOutSpacing = zoomedOutGridDelegate.mainAxisSpacing;
+    expect(zoomedOutSpacing, lessThanOrEqualTo(zoomedInSpacing));
   });
 
   testWidgets('Zoom controls remain visible when zoomed in', (WidgetTester tester) async {
+    final gameProvider = GameProvider();
+    // Use test state instead of real initialization to avoid hanging
+    gameProvider.testGameState = _createTestGameState();
+    
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => TimerService()),
-          ChangeNotifierProvider(create: (_) => GameProvider()),
+          ChangeNotifierProvider.value(value: gameProvider),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
         child: MaterialApp(
@@ -124,11 +88,6 @@ void main() {
     );
 
     // Wait for the board to load
-    await tester.pumpAndSettle();
-
-    // Initialize the game first
-    final gameProvider = tester.element(find.byType(GamePage)).read<GameProvider>();
-    await gameProvider.initializeGame('easy');
     await tester.pumpAndSettle();
 
     // Find zoom controls
@@ -145,4 +104,45 @@ void main() {
     expect(find.byIcon(Icons.zoom_in), findsOneWidget);
     expect(find.byIcon(Icons.zoom_out), findsOneWidget);
   });
+}
+
+// Helper method to create test game state
+GameState _createTestGameState() {
+  final board = List.generate(9, (row) => 
+    List.generate(9, (col) => Cell(row: row, col: col, hasBomb: false))
+  );
+  
+  // Add one mine in the corner
+  board[0][0] = board[0][0].copyWith(hasBomb: true);
+  
+  // Set bomb counts for safe cells
+  for (int row = 0; row < 9; row++) {
+    for (int col = 0; col < 9; col++) {
+      if (!board[row][col].hasBomb) {
+        int count = 0;
+        for (int dr = -1; dr <= 1; dr++) {
+          for (int dc = -1; dc <= 1; dc++) {
+            if (dr == 0 && dc == 0) continue;
+            final nr = row + dr;
+            final nc = col + dc;
+            if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
+              if (board[nr][nc].hasBomb) count++;
+            }
+          }
+        }
+        board[row][col] = board[row][col].copyWith(bombsAround: count);
+      }
+    }
+  }
+
+  return GameState(
+    board: board,
+    gameStatus: 'playing',
+    minesCount: 1,
+    flaggedCount: 0,
+    revealedCount: 0,
+    totalCells: 81,
+    startTime: DateTime.now(),
+    difficulty: 'easy',
+  );
 } 

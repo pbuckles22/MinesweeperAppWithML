@@ -245,3 +245,17 @@ The Flutter Minesweeper project now has a robust, comprehensive testing strategy
 
 **Status**: ✅ TESTING STRATEGY COMPLETE AND SUCCESSFUL
 >>>>>>> main
+
+## Feature Flags: Not Yet Implemented (UI toggles are greyed out)
+
+- [ ] Undo Move: Implement undo/redo move logic in GameProvider and UI.
+- [ ] Hint System: Implement hint logic to suggest safe moves to the player.
+- [ ] Auto-Flag: Implement logic to automatically flag obvious mines.
+- [ ] Board Reset: Implement board/game reset logic (mid-game) in GameProvider and UI.
+- [ ] Custom Difficulty: Implement custom board size and mine count selection in UI and game logic.
+- [ ] Best Times: Implement best times tracking and display in UI.
+- [ ] Animations: Implement smooth animations and allow toggling in settings.
+- [ ] Sound Effects: Implement sound effects and allow toggling in settings.
+- [ ] ML Assistance: Implement machine learning powered assistance for gameplay.
+- [ ] Auto-Play: Implement auto-play functionality (AI plays the game automatically).
+- [ ] Difficulty Prediction: Implement AI-based difficulty prediction and display in UI.

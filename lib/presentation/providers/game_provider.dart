@@ -71,6 +71,12 @@ class GameProvider extends ChangeNotifier {
       _clearError();
       
       _gameState = await _repository.revealCell(row, col);
+      
+      // Start timer on first move if not already running
+      if (!_timerService.isRunning) {
+        _timerService.start();
+      }
+      
       await updateFiftyFiftyDetection();
       notifyListeners();
       
@@ -92,6 +98,12 @@ class GameProvider extends ChangeNotifier {
       _clearError();
       
       _gameState = await _repository.toggleFlag(row, col);
+      
+      // Start timer on first move if not already running
+      if (!_timerService.isRunning) {
+        _timerService.start();
+      }
+      
       await updateFiftyFiftyDetection();
       notifyListeners();
     } catch (e) {
@@ -112,12 +124,33 @@ class GameProvider extends ChangeNotifier {
 
   // Get game statistics
   Map<String, dynamic> getGameStatistics() {
-    final stats = _repository.getGameStatistics();
-    if (FeatureFlags.enableGameStatistics) {
-      stats['timerElapsed'] = _timerService.elapsed.inSeconds;
-      stats['timerRunning'] = _timerService.isRunning;
+    // Use provider's game state if available, otherwise fall back to repository
+    if (_gameState != null) {
+      final stats = {
+        'difficulty': _gameState!.difficulty,
+        'minesCount': _gameState!.minesCount,
+        'flaggedCount': _gameState!.flaggedCount,
+        'revealedCount': _gameState!.revealedCount,
+        'remainingMines': _gameState!.remainingMines,
+        'progressPercentage': _gameState!.progressPercentage,
+        'gameDuration': _gameState!.gameDuration?.inSeconds,
+        'isGameOver': _gameState!.isGameOver,
+        'isWon': _gameState!.isWon,
+        'isLost': _gameState!.isLost,
+      };
+      if (FeatureFlags.enableGameStatistics) {
+        stats['timerElapsed'] = _timerService.elapsed.inSeconds;
+        stats['timerRunning'] = _timerService.isRunning;
+      }
+      return stats;
+    } else {
+      final stats = _repository.getGameStatistics();
+      if (FeatureFlags.enableGameStatistics) {
+        stats['timerElapsed'] = _timerService.elapsed.inSeconds;
+        stats['timerRunning'] = _timerService.isRunning;
+      }
+      return stats;
     }
-    return stats;
   }
 
   // Get remaining mines
@@ -336,6 +369,23 @@ class GameProvider extends ChangeNotifier {
     if (!FeatureFlags.enable5050SafeMove) return;
     if (!isCellIn5050Situation(row, col)) return;
     await revealCell(row, col);
+  }
+
+  /// Reset the game to initial state
+  Future<void> resetGame() async {
+    try {
+      _setLoading(true);
+      _clearError();
+      
+      _gameState = await _repository.resetGame();
+      _timerService.reset();
+      _fiftyFiftyCells.clear();
+      notifyListeners();
+    } catch (e) {
+      _setError('Failed to reset game: $e');
+    } finally {
+      _setLoading(false);
+    }
   }
 
   /// Stub for forceResetRepository to satisfy UI/tests

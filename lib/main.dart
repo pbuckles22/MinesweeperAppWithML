@@ -13,12 +13,29 @@ void main() async {
   // Validate game configuration before app starts
   try {
     await GameModeConfig.instance.loadGameModes();
-    
-    // Initialize FeatureFlags from JSON configuration
-    // This ensures the flags are set before any providers are created
-    FeatureFlags.enableFirstClickGuarantee = GameModeConfig.instance.defaultKickstarterMode;
-    FeatureFlags.enable5050Detection = GameModeConfig.instance.default5050Detection;
-    FeatureFlags.enable5050SafeMove = GameModeConfig.instance.default5050SafeMove;
+    // Set all feature flags from JSON config
+    final featureFlagMap = GameModeConfig.instance.defaultFeatureFlags;
+    // Map JSON keys to FeatureFlags static fields
+    FeatureFlags.enableFirstClickGuarantee = featureFlagMap['kickstarter_mode'] ?? false;
+    FeatureFlags.enable5050Detection = featureFlagMap['5050_detection'] ?? false;
+    FeatureFlags.enable5050SafeMove = featureFlagMap['5050_safe_move'] ?? false;
+    FeatureFlags.enableGameStatistics = featureFlagMap['game_statistics'] ?? false;
+    FeatureFlags.enableBoardReset = featureFlagMap['board_reset'] ?? false;
+    FeatureFlags.enableCustomDifficulty = featureFlagMap['custom_difficulty'] ?? false;
+    FeatureFlags.enableUndoMove = featureFlagMap['undo_move'] ?? false;
+    FeatureFlags.enableHintSystem = featureFlagMap['hint_system'] ?? false;
+    FeatureFlags.enableAutoFlag = featureFlagMap['auto_flag'] ?? false;
+    FeatureFlags.enableBestTimes = featureFlagMap['best_times'] ?? false;
+    FeatureFlags.enableDarkMode = featureFlagMap['dark_mode'] ?? false;
+    FeatureFlags.enableAnimations = featureFlagMap['animations'] ?? false;
+    FeatureFlags.enableSoundEffects = featureFlagMap['sound_effects'] ?? false;
+    FeatureFlags.enableHapticFeedback = featureFlagMap['haptic_feedback'] ?? false;
+    FeatureFlags.enableMLAssistance = featureFlagMap['ml_assistance'] ?? false;
+    FeatureFlags.enableAutoPlay = featureFlagMap['auto_play'] ?? false;
+    FeatureFlags.enableDifficultyPrediction = featureFlagMap['difficulty_prediction'] ?? false;
+    FeatureFlags.enableDebugMode = featureFlagMap['debug_mode'] ?? false;
+    FeatureFlags.enablePerformanceMetrics = featureFlagMap['performance_metrics'] ?? false;
+    FeatureFlags.enableTestMode = featureFlagMap['test_mode'] ?? false;
     
     // print('DEBUG: main - FeatureFlags initialized from JSON:');
     // print('DEBUG:   enableFirstClickGuarantee: ${FeatureFlags.enableFirstClickGuarantee}');
